@@ -21,14 +21,14 @@ Published package:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@maxcraftmc/carbon-svelte@0.1.0",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }
 ```
 
 Remove the old `carbon-components` dependency unless the app imports it
-directly. `@maxcraftmc/carbon-svelte` includes the CSS entrypoints it needs.
+directly. `@ifloppy/maxcraftmc-ui-svelte` includes the CSS entrypoints it needs.
 
 ## 2. Keep Component Imports
 
@@ -44,7 +44,7 @@ Direct imports are also supported for new code:
 
 ```svelte
 <script>
-  import { Button, Header, Theme } from "@maxcraftmc/carbon-svelte";
+  import { Button, Header, Theme } from "@ifloppy/maxcraftmc-ui-svelte";
 </script>
 ```
 

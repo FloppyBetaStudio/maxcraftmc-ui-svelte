@@ -1,4 +1,4 @@
-# @maxcraftmc/carbon-svelte
+# @ifloppy/maxcraftmc-ui-svelte
 
 MaxCraft themed compatibility build of `carbon-components-svelte@0.89.4`.
 
@@ -8,7 +8,7 @@ Svelte apps can migrate with minimal source changes.
 
 ## What This Package Is
 
-`@maxcraftmc/carbon-svelte` is the shared UI foundation for MaxCraft web
+`@ifloppy/maxcraftmc-ui-svelte` is the shared UI foundation for MaxCraft web
 projects:
 
 - Svelte component library compatible with `carbon-components-svelte@0.89.4`
@@ -22,7 +22,7 @@ theme tokens and visual overrides are MaxCraft-specific.
 ## Install
 
 ```sh
-npm install @maxcraftmc/carbon-svelte carbon-icons-svelte
+npm install @ifloppy/maxcraftmc-ui-svelte carbon-icons-svelte
 ```
 
 For applications that already import `carbon-components-svelte`, use an npm
@@ -31,7 +31,7 @@ alias after the package is published:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@maxcraftmc/carbon-svelte@0.1.0",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }

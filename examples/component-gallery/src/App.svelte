@@ -337,7 +337,7 @@
             <ProgressStep label="验收" />
           </ProgressIndicator>
           <FileUploader labelTitle="上传配置" labelDescription="显示文件状态" buttonLabel="选择文件" bind:files status="complete" />
-          <CodeSnippet type="single">npm install @maxcraftmc/carbon-svelte</CodeSnippet>
+          <CodeSnippet type="single">npm install @ifloppy/maxcraftmc-ui-svelte</CodeSnippet>
           <CopyButton text="mc.maxcraft.org" />
           <Popover open caret align="bottom-left" relative>
             <Button size="small">Popover trigger</Button>

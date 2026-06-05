@@ -1,13 +1,13 @@
 # Consumer Migration Checklist
 
 Use this checklist when connecting a Svelte or Hugo consumer to
-`@maxcraftmc/carbon-svelte`.
+`@ifloppy/maxcraftmc-ui-svelte`.
 
 ## Svelte Consumer
 
 - Replace `carbon-components-svelte` with a local file alias during development:
   `file:../maxcraft-ui`.
-- Replace the local alias with `npm:@maxcraftmc/carbon-svelte@<version>` after
+- Replace the local alias with `npm:@ifloppy/maxcraftmc-ui-svelte@<version>` after
   publishing.
 - Keep `carbon-icons-svelte` installed.
 - Remove `carbon-components` unless the app imports it directly.

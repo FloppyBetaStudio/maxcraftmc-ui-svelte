@@ -10,15 +10,15 @@ This package supports two consumption modes:
 Install the package and keep `carbon-icons-svelte` as the icon source:
 
 ```sh
-npm install @maxcraftmc/carbon-svelte carbon-icons-svelte
+npm install @ifloppy/maxcraftmc-ui-svelte carbon-icons-svelte
 ```
 
 For a new Svelte app, import directly:
 
 ```js
-import { Button } from "@maxcraftmc/carbon-svelte";
-import "@maxcraftmc/carbon-svelte/css/all.css";
-import "@maxcraftmc/carbon-svelte/css/maxcraft.css";
+import { Button } from "@ifloppy/maxcraftmc-ui-svelte";
+import "@ifloppy/maxcraftmc-ui-svelte/css/all.css";
+import "@ifloppy/maxcraftmc-ui-svelte/css/maxcraft.css";
 ```
 
 For an existing Carbon Svelte app, use an alias so source imports can stay
@@ -27,7 +27,7 @@ unchanged:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@maxcraftmc/carbon-svelte@0.1.0",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }

@@ -49,7 +49,7 @@ Then update consumers from local file aliases to npm aliases:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@maxcraftmc/carbon-svelte@0.1.0"
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0"
   }
 }
 ```
