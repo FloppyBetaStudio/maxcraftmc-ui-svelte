@@ -10,14 +10,6 @@ npm install --ignore-scripts
 npm run check
 ```
 
-When developing against `mpc-web`:
-
-```sh
-cd ../mpc-web
-npm install --ignore-scripts
-npm run check
-```
-
 ## What To Change First
 
 - For visual work, prefer `tokens/maxcraft.css` and `css/maxcraft.css`.
@@ -45,7 +37,7 @@ npm run check
 
 ## Verification
 
-Run from `maxcraft-ui`:
+Run from the package root:
 
 ```sh
 npm run check
@@ -61,20 +53,8 @@ The local checks cover:
 - CSS entrypoint existence
 - documentation and README link integrity
 
-Run consumers when shared CSS or package metadata changes:
+## AI Generated Notice
 
-```sh
-cd ../mpc-web
-npm run check
-npm run build
-
-cd ../maxcraftmc-wiki
-hugo --gc --minify
-```
-
-## GitNexus
-
-When editing existing symbols, run impact analysis before changes and
-`gitnexus detect-changes` before committing. Documentation-only changes usually
-do not map to symbols, but still run detect-changes before commit when the root
-repository requires it.
+This project was generated entirely by AI. Contributions and releases should
+include human review for source correctness, accessibility, security, licensing,
+and compatibility before production use.

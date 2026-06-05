@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Added explicit AI-generated project notices.
+- Removed internal/local consumer documentation from the public docs.
+- Updated published package metadata and public usage snippets.
+
 ## 0.1.0
 
 Initial MaxCraft compatibility package.

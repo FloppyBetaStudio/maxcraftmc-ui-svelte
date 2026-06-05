@@ -7,6 +7,9 @@ This package supports two consumption modes:
 
 ## Published Package
 
+This project was generated entirely by AI. Review the code, behavior,
+accessibility, security, and licensing fit before relying on it in production.
+
 Install the package and keep `carbon-icons-svelte` as the icon source:
 
 ```sh
@@ -27,7 +30,7 @@ unchanged:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
     "carbon-icons-svelte": "^13.5.0"
   }
 }
@@ -40,34 +43,6 @@ import { Button, Theme } from "carbon-components-svelte";
 import "carbon-components-svelte/css/all.css";
 import "carbon-components-svelte/css/maxcraft.css";
 ```
-
-## Local Development In mpc-solution
-
-Use the local file alias while editing the UI package beside consumers:
-
-```json
-{
-  "dependencies": {
-    "carbon-components-svelte": "file:../maxcraft-ui",
-    "carbon-icons-svelte": "^13.5.0"
-  }
-}
-```
-
-Then install in both projects:
-
-```sh
-cd maxcraft-ui
-npm install --ignore-scripts
-
-cd ../mpc-web
-npm install --ignore-scripts
-```
-
-The `maxcraft-ui` install is needed during local file-link development because
-Vite resolves package source files through the real path and dependencies such
-as `flatpickr` must exist beside that source tree. Published npm installs do not
-need this extra step.
 
 ## Required CSS Entrypoints
 

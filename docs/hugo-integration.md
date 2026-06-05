@@ -15,7 +15,7 @@ Then import the public MaxCraft UI module and mount its CSS directory:
 
 ```toml
 [[module.imports]]
-path = "github.com/FloppyBetaStudio/maxcraft-ui"
+path = "github.com/FloppyBetaStudio/maxcraftmc-ui-svelte"
 
 [[module.imports.mounts]]
 source = "css"
@@ -61,13 +61,13 @@ Include `maxcraft.css` before site-specific overrides:
 {{ end }}
 ```
 
-For `maxcraftmc-wiki`, the intended order is:
+The intended order is:
 
-1. Tailbliss/Tailwind base CSS
+1. Site base CSS
 2. `maxcraft-ui/maxcraft.css`
-3. Wiki-specific `css/site.css`
+3. Site-specific overrides
 
-This order gives the wiki the shared tokens while preserving its custom page
+This order gives the site the shared tokens while preserving its custom page
 layouts and animations.
 
 ## 3. Use Shared Tokens

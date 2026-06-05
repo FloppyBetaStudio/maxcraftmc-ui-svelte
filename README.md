@@ -19,6 +19,13 @@ projects:
 The implementation is derived from Carbon Svelte 0.89.4 under Apache-2.0. The
 theme tokens and visual overrides are MaxCraft-specific.
 
+## AI Generated Notice
+
+This project was generated entirely by AI. Treat it as experimental software:
+review the source, dependency behavior, accessibility, security, and licensing
+fit before using it in production. MaxCraft-specific styling and compatibility
+claims should be validated in each consuming application.
+
 ## Install
 
 ```sh
@@ -31,18 +38,7 @@ alias after the package is published:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1",
-    "carbon-icons-svelte": "^13.5.0"
-  }
-}
-```
-
-During local development inside `mpc-solution`, use a file dependency:
-
-```json
-{
-  "dependencies": {
-    "carbon-components-svelte": "file:../maxcraft-ui",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
     "carbon-icons-svelte": "^13.5.0"
   }
 }
@@ -104,16 +100,6 @@ npm run build
 `npm run check` verifies that the public API exports and required CSS entrypoints
 exist. `npm run build` also runs `npm pack --dry-run` to prove the package can be
 published.
-
-## Consumer Status
-
-Current local consumers in `mpc-solution`:
-
-- `mpc-web`: SvelteKit app using the component package through a local file alias.
-- `maxcraftmc-wiki`: Hugo site using `css/maxcraft.css` through Hugo module mounts.
-
-Use [Consumer migration checklist](docs/consumer-checklist.md) when adding new
-apps or moving consumers from local file aliases to the published npm package.
 
 ## Attribution
 

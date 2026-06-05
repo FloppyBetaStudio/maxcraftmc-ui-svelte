@@ -1,5 +1,5 @@
 [[module.imports]]
-path = "github.com/FloppyBetaStudio/maxcraft-ui"
+path = "github.com/FloppyBetaStudio/maxcraftmc-ui-svelte"
 
 [[module.imports.mounts]]
 source = "css"

@@ -5,26 +5,25 @@ Use this checklist when connecting a Svelte or Hugo consumer to
 
 ## Svelte Consumer
 
-- Replace `carbon-components-svelte` with a local file alias during development:
-  `file:../maxcraft-ui`.
-- Replace the local alias with `npm:@ifloppy/maxcraftmc-ui-svelte@<version>` after
-  publishing.
+- Replace `carbon-components-svelte` with
+  `npm:@ifloppy/maxcraftmc-ui-svelte@<version>`.
 - Keep `carbon-icons-svelte` installed.
 - Remove `carbon-components` unless the app imports it directly.
 - Import `carbon-components-svelte/css/all.css` once in the root layout.
 - Import `carbon-components-svelte/css/maxcraft.css` once after `all.css`.
 - Keep existing component imports unchanged when using the alias.
 - Run `npm install --ignore-scripts`.
-- During local file-link development, also run `npm install --ignore-scripts`
-  inside `maxcraft-ui`.
 - Run `npm run check`.
 - Run `npm run build`.
 - Manually verify navigation, form controls, modals, notifications, tiles, tags,
   and dark mode.
+- Because this package was generated entirely by AI, review source behavior,
+  accessibility, security, and compatibility in the consumer app before
+  production use.
 
 ## Hugo Consumer
 
-- Import `github.com/FloppyBetaStudio/maxcraft-ui` as a Hugo module and mount
+- Import `github.com/FloppyBetaStudio/maxcraftmc-ui-svelte` as a Hugo module and mount
   its `css` directory to `assets/maxcraft-ui`.
 - If adding project-level mounts, explicitly restore default mounts for
   `assets`, `content`, `layouts`, `static`, and any other site folders in use.
@@ -36,7 +35,7 @@ Use this checklist when connecting a Svelte or Hugo consumer to
 
 ## Release Consumer
 
-- Update the consumer lockfile after changing from `file:` to `npm:`.
+- Update the consumer lockfile after changing package versions.
 - Run consumer checks after every package version bump.
 - Check for accidental duplicate CSS imports.
 - Keep `carbon-icons-svelte` version compatible with the consuming app.

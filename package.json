@@ -1,6 +1,6 @@
 {
   "name": "@ifloppy/maxcraftmc-ui-svelte",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "Apache-2.0",
   "description": "MaxCraft themed compatibility build of carbon-components-svelte 0.89.4.",
   "type": "module",
@@ -69,7 +69,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/FloppyBetaStudio/maxcraft-ui.git"
+    "url": "git+https://github.com/ifloppy/maxcraftmc-ui-svelte.git"
   },
   "keywords": [
     "carbon",

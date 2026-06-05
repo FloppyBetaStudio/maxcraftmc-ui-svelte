@@ -5,14 +5,12 @@
 The intended public repository is:
 
 ```sh
-https://github.com/FloppyBetaStudio/maxcraft-ui.git
+https://github.com/FloppyBetaStudio/maxcraftmc-ui-svelte.git
 ```
-
-The root `mpc-solution` repository tracks this directory as a Git submodule.
 
 ## Pre-Publish Checks
 
-Run from `maxcraft-ui`:
+Run:
 
 ```sh
 npm install --ignore-scripts
@@ -23,18 +21,6 @@ npm run build
 `npm run build` performs a dry-run package build with `npm pack --dry-run`.
 The check step verifies API parity, export targets, a Vite/Svelte smoke build,
 placeholder markers, CSS entrypoints, and documentation links.
-
-Also verify consumers:
-
-```sh
-cd ../mpc-web
-npm install --ignore-scripts
-npm run check
-npm run build
-
-cd ../maxcraftmc-wiki
-hugo --gc --minify
-```
 
 ## Publish
 
@@ -49,10 +35,16 @@ Then update consumers from local file aliases to npm aliases:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1"
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2"
   }
 }
 ```
+
+## AI Generated Notice
+
+This package was generated entirely by AI. Each release should be reviewed for
+source correctness, accessibility, security, licensing, and compatibility before
+production use.
 
 ## Attribution Requirements
 
@@ -70,5 +62,4 @@ from `carbon-components-svelte@0.89.4`, which is Apache-2.0 licensed.
 - Keep `css/maxcraft.css` self-contained for Hugo.
 - Keep `tokens/maxcraft.css` as the token source for future tooling.
 - Run API and CSS entrypoint checks before every release.
-- Test `mpc-web` and `maxcraftmc-wiki` before bumping the package version.
 - Avoid introducing a dependency on Carbon icons beyond `carbon-icons-svelte`.

@@ -1,27 +1,15 @@
 # Svelte Migration Guide
 
-This guide is for apps already using `carbon-components-svelte@0.89.4`, such as
-`mpc-web`.
+This guide is for apps already using `carbon-components-svelte@0.89.4`.
 
 ## 1. Replace The Dependency
-
-Local development:
-
-```json
-{
-  "dependencies": {
-    "carbon-components-svelte": "file:../maxcraft-ui",
-    "carbon-icons-svelte": "^13.5.0"
-  }
-}
-```
 
 Published package:
 
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
     "carbon-icons-svelte": "^13.5.0"
   }
 }
@@ -29,6 +17,8 @@ Published package:
 
 Remove the old `carbon-components` dependency unless the app imports it
 directly. `@ifloppy/maxcraftmc-ui-svelte` includes the CSS entrypoints it needs.
+This project was generated entirely by AI, so review compatibility and behavior
+in the consuming app before production use.
 
 ## 2. Keep Component Imports
 
@@ -109,15 +99,3 @@ Manually inspect:
 - Tiles and tags
 - Light/dark theme switching
 - Mobile layout
-
-## Known Local Development Detail
-
-When using `file:../maxcraft-ui`, install dependencies in `maxcraft-ui` itself:
-
-```sh
-cd ../maxcraft-ui
-npm install --ignore-scripts
-```
-
-This avoids Vite resolution failures for transitive dependencies such as
-`flatpickr`.

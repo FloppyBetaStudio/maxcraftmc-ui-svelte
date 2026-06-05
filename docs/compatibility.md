@@ -31,6 +31,8 @@ cannot see.
 - This package does not replace `carbon-icons-svelte`.
 - This package does not guarantee visual parity with IBM Carbon; MaxCraft visual
   language is the intended output.
+- This package does not provide a human-authored guarantee of correctness. It
+  was generated entirely by AI and must be reviewed before production use.
 
 ## Adding Or Changing Components
 
@@ -39,7 +41,6 @@ Before changing a component API:
 1. Compare against `carbon-components-svelte@0.89.4`.
 2. Preserve existing prop/event/slot names unless a breaking release is planned.
 3. Run `npm run check`.
-4. Verify `mpc-web` with `npm run check` and `npm run build`.
 
 If a component needs MaxCraft-specific behavior, prefer CSS/token customization
 first. Add new props only when CSS cannot express the requirement.
