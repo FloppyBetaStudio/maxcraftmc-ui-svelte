@@ -1,0 +1,84 @@
+:root {
+  --mc-bedrock: #2f2f32;
+  --mc-bedrock-dark: #1d1e20;
+  --mc-border: #0f1011;
+  --mc-grass: #4c9a2a;
+  --mc-grass-dark: #2f6f1f;
+  --mc-dirt: #6b4423;
+  --mc-stone: #737373;
+  --mc-stone-light: #c9c9c9;
+  --mc-gold: #f5c542;
+  --mc-diamond: #55d6d2;
+  --mc-redstone: #d43c2f;
+  --mc-ink: #101827;
+  --mc-paper: #f7f4e8;
+  --mc-font-sans: "IBM Plex Sans", "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  --mc-font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --mc-shadow-inset: inset 0 3px rgb(255 255 255 / 0.22), inset 0 -4px rgb(0 0 0 / 0.2);
+  --mc-shadow-block: var(--mc-shadow-inset), 0 4px 0 rgb(0 0 0 / 0.28);
+}
+
+:root,
+.bx--white,
+[data-carbon-theme="white"],
+[data-carbon-theme="g10"] {
+  --cds-interactive-01: var(--mc-grass);
+  --cds-interactive-02: var(--mc-bedrock);
+  --cds-interactive-03: var(--mc-grass-dark);
+  --cds-interactive-04: var(--mc-redstone);
+  --cds-ui-background: var(--mc-paper);
+  --cds-background: var(--mc-paper);
+  --cds-ui-01: #ffffff;
+  --cds-ui-02: #efe9d5;
+  --cds-ui-03: var(--mc-stone-light);
+  --cds-ui-04: var(--mc-stone);
+  --cds-ui-05: var(--mc-ink);
+  --cds-text-01: var(--mc-ink);
+  --cds-text-02: #374151;
+  --cds-text-03: #6b7280;
+  --cds-text-04: #ffffff;
+  --cds-icon-01: var(--mc-ink);
+  --cds-icon-02: #374151;
+  --cds-link-01: var(--mc-grass-dark);
+  --cds-focus: var(--mc-diamond);
+  --cds-hover-primary: var(--mc-grass-dark);
+  --cds-hover-secondary: #3f4247;
+  --cds-hover-ui: #eef8e9;
+  --cds-selected-ui: #dfead9;
+  --cds-skeleton-01: #e7e1cf;
+  --cds-skeleton-02: #d5d1c3;
+}
+
+.bx--g80,
+.bx--g90,
+.bx--g100,
+[data-carbon-theme="g80"],
+[data-carbon-theme="g90"],
+[data-carbon-theme="g100"],
+.dark {
+  --cds-interactive-01: #62d76b;
+  --cds-interactive-02: #d5d1c3;
+  --cds-interactive-03: #86efac;
+  --cds-interactive-04: var(--mc-redstone);
+  --cds-ui-background: #111827;
+  --cds-background: #111827;
+  --cds-ui-01: #1d1e20;
+  --cds-ui-02: #2f2f32;
+  --cds-ui-03: #3f3f46;
+  --cds-ui-04: #737373;
+  --cds-ui-05: #f9fafb;
+  --cds-text-01: #f9fafb;
+  --cds-text-02: #d1d5db;
+  --cds-text-03: #9ca3af;
+  --cds-text-04: #101827;
+  --cds-icon-01: #f9fafb;
+  --cds-icon-02: #d1d5db;
+  --cds-link-01: #86efac;
+  --cds-focus: var(--mc-diamond);
+  --cds-hover-primary: #208f3c;
+  --cds-hover-secondary: #d5d1c3;
+  --cds-hover-ui: #243044;
+  --cds-selected-ui: #2f2f32;
+  --cds-skeleton-01: #2f2f32;
+  --cds-skeleton-02: #4b5563;
+}

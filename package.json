@@ -1,0 +1,80 @@
+{
+  "name": "@maxcraftmc/carbon-svelte",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "MaxCraft themed compatibility build of carbon-components-svelte 0.89.4.",
+  "type": "module",
+  "svelte": "./src/index.js",
+  "main": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "svelte": "./src/index.js",
+      "import": "./src/index.js"
+    },
+    "./css/*": "./css/*",
+    "./src/*.svelte": {
+      "types": "./types/*.svelte.d.ts",
+      "import": "./src/*.svelte"
+    },
+    "./src/*.js": {
+      "types": "./types/*.d.ts",
+      "import": "./src/*.js"
+    },
+    "./src/*": {
+      "types": "./types/*.d.ts",
+      "import": "./src/*.js"
+    }
+  },
+  "sideEffects": [
+    "css/*.css"
+  ],
+  "files": [
+    "src",
+    "types",
+    "css",
+    "tokens",
+    "docs",
+    "examples/hugo-head.html",
+    "examples/hugo-module-mounts.toml",
+    "examples/svelte-basic",
+    "examples/component-gallery/index.html",
+    "examples/component-gallery/src",
+    "examples/component-gallery/vite.config.js",
+    "NOTICE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "check": "node scripts/check-api-compat.mjs && node scripts/check-export-targets.mjs && node scripts/check-vite-smoke.mjs && node scripts/check-no-placeholders.mjs && node scripts/check-css-entrypoints.mjs && node scripts/check-docs.mjs && node scripts/check-gallery-coverage.mjs",
+    "build": "npm run check && npm pack --dry-run",
+    "gallery:build": "vite build examples/component-gallery",
+    "gallery:audit": "node scripts/audit-component-gallery.mjs",
+    "test": "npm run check"
+  },
+  "dependencies": {
+    "flatpickr": "4.6.9"
+  },
+  "peerDependencies": {
+    "svelte": ">=3 <6"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "carbon-components-svelte": "0.89.4",
+    "vite": "^6.2.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://github1:FloppyBetaStudio/maxcraft-ui.git"
+  },
+  "keywords": [
+    "carbon",
+    "svelte",
+    "maxcraft",
+    "component-library"
+  ]
+}
