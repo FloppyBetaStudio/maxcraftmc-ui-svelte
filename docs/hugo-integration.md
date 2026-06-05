@@ -5,11 +5,20 @@ theme layer and design tokens.
 
 ## 1. Mount The CSS Directory
 
-In the Hugo site config:
+Initialize the Hugo site as a module if it does not already have `go.mod`:
+
+```sh
+hugo mod init github.com/YourOrg/your-site
+```
+
+Then import the public MaxCraft UI module and mount its CSS directory:
 
 ```toml
-[[module.mounts]]
-source = "../maxcraft-ui/css"
+[[module.imports]]
+path = "github.com/FloppyBetaStudio/maxcraft-ui"
+
+[[module.imports.mounts]]
+source = "css"
 target = "assets/maxcraft-ui"
 ```
 
@@ -77,6 +86,7 @@ Prefer token names over hard-coded colors for new shared UI styling.
 ## 4. Build
 
 ```sh
+hugo mod tidy
 hugo --gc --minify
 ```
 

@@ -24,7 +24,8 @@ Use this checklist when connecting a Svelte or Hugo consumer to
 
 ## Hugo Consumer
 
-- Mount `../maxcraft-ui/css` to `assets/maxcraft-ui`.
+- Import `github.com/FloppyBetaStudio/maxcraft-ui` as a Hugo module and mount
+  its `css` directory to `assets/maxcraft-ui`.
 - If adding project-level mounts, explicitly restore default mounts for
   `assets`, `content`, `layouts`, `static`, and any other site folders in use.
 - Include `maxcraft-ui/maxcraft.css` before site-specific CSS.

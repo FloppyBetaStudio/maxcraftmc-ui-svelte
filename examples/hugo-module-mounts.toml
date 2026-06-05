@@ -1,5 +1,8 @@
-[[module.mounts]]
-source = "../maxcraft-ui/css"
+[[module.imports]]
+path = "github.com/FloppyBetaStudio/maxcraft-ui"
+
+[[module.imports.mounts]]
+source = "css"
 target = "assets/maxcraft-ui"
 
 [[module.mounts]]
