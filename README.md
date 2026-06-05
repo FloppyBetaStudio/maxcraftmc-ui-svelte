@@ -31,7 +31,7 @@ alias after the package is published:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1",
     "carbon-icons-svelte": "^13.5.0"
   }
 }

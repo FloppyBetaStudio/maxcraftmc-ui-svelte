@@ -5,7 +5,7 @@
 The intended public repository is:
 
 ```sh
-github1:FloppyBetaStudio/maxcraft-ui.git
+https://github.com/FloppyBetaStudio/maxcraft-ui.git
 ```
 
 The root `mpc-solution` repository tracks this directory as a Git submodule.
@@ -49,7 +49,7 @@ Then update consumers from local file aliases to npm aliases:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.0"
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.1"
   }
 }
 ```
