@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+- Added byte-for-byte upstream sync checks for `src/` and `types/`.
+- Refined the MaxCraft theme surfaces, shadows, typography, and data controls
+  for calmer operational UI usage.
+- Fixed explicit light themes being affected by system dark-mode content
+  backgrounds.
+- Improved component gallery auditing so it can find Playwright from npm cache
+  locations.
+
 ## 0.1.2
 
 - Added explicit AI-generated project notices.

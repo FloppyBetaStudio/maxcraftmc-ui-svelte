@@ -1,6 +1,6 @@
 {
   "name": "@ifloppy/maxcraftmc-ui-svelte",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "Apache-2.0",
   "description": "MaxCraft themed compatibility build of carbon-components-svelte 0.89.4.",
   "type": "module",
@@ -47,7 +47,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "check": "node scripts/check-api-compat.mjs && node scripts/check-export-targets.mjs && node scripts/check-vite-smoke.mjs && node scripts/check-no-placeholders.mjs && node scripts/check-css-entrypoints.mjs && node scripts/check-docs.mjs && node scripts/check-gallery-coverage.mjs",
+    "check": "node scripts/check-upstream-definitions.mjs && node scripts/check-api-compat.mjs && node scripts/check-export-targets.mjs && node scripts/check-vite-smoke.mjs && node scripts/check-no-placeholders.mjs && node scripts/check-css-entrypoints.mjs && node scripts/check-docs.mjs && node scripts/check-gallery-coverage.mjs",
     "build": "npm run check && npm pack --dry-run",
     "gallery:build": "vite build examples/component-gallery",
     "gallery:audit": "node scripts/audit-component-gallery.mjs",

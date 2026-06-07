@@ -12,10 +12,21 @@
   --mc-redstone: #d43c2f;
   --mc-ink: #101827;
   --mc-paper: #f7f4e8;
+  --mc-paper-soft: #fbf7ec;
+  --mc-field: #e6dec9;
+  --mc-field-hover: #efe6cf;
+  --mc-layer: #fffaf0;
+  --mc-layer-accent: #e7f2df;
+  --mc-layer-hover: #f0f7e9;
+  --mc-dark-background: #10151b;
+  --mc-dark-layer: #1b222a;
+  --mc-dark-layer-accent: #25301f;
+  --mc-dark-layer-hover: #263447;
   --mc-font-sans: "IBM Plex Sans", "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
   --mc-font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --mc-shadow-inset: inset 0 3px rgb(255 255 255 / 0.22), inset 0 -4px rgb(0 0 0 / 0.2);
-  --mc-shadow-block: var(--mc-shadow-inset), 0 4px 0 rgb(0 0 0 / 0.28);
+  --mc-shadow-inset: inset 0 2px rgb(255 255 255 / 0.2), inset 0 -3px rgb(0 0 0 / 0.15);
+  --mc-shadow-block: var(--mc-shadow-inset), 0 3px 0 rgb(0 0 0 / 0.22);
+  --mc-shadow-surface: inset 0 2px rgb(255 255 255 / 0.2), inset 0 -3px rgb(0 0 0 / 0.1), 0 4px 0 rgb(0 0 0 / 0.14);
 }
 
 :root,
@@ -26,10 +37,10 @@
   --cds-interactive-02: var(--mc-bedrock);
   --cds-interactive-03: var(--mc-grass-dark);
   --cds-interactive-04: var(--mc-redstone);
-  --cds-ui-background: var(--mc-paper);
-  --cds-background: var(--mc-paper);
-  --cds-ui-01: #ffffff;
-  --cds-ui-02: #efe9d5;
+  --cds-ui-background: var(--mc-paper-soft);
+  --cds-background: var(--mc-paper-soft);
+  --cds-ui-01: var(--mc-layer);
+  --cds-ui-02: #f1ead8;
   --cds-ui-03: var(--mc-stone-light);
   --cds-ui-04: var(--mc-stone);
   --cds-ui-05: var(--mc-ink);
@@ -43,8 +54,8 @@
   --cds-focus: var(--mc-diamond);
   --cds-hover-primary: var(--mc-grass-dark);
   --cds-hover-secondary: #3f4247;
-  --cds-hover-ui: #eef8e9;
-  --cds-selected-ui: #dfead9;
+  --cds-hover-ui: var(--mc-layer-hover);
+  --cds-selected-ui: var(--mc-layer-accent);
   --cds-skeleton-01: #e7e1cf;
   --cds-skeleton-02: #d5d1c3;
 }
@@ -60,10 +71,10 @@
   --cds-interactive-02: #d5d1c3;
   --cds-interactive-03: #86efac;
   --cds-interactive-04: var(--mc-redstone);
-  --cds-ui-background: #111827;
-  --cds-background: #111827;
-  --cds-ui-01: #1d1e20;
-  --cds-ui-02: #2f2f32;
+  --cds-ui-background: var(--mc-dark-background);
+  --cds-background: var(--mc-dark-background);
+  --cds-ui-01: var(--mc-dark-layer);
+  --cds-ui-02: #232b35;
   --cds-ui-03: #3f3f46;
   --cds-ui-04: #737373;
   --cds-ui-05: #f9fafb;
@@ -77,8 +88,8 @@
   --cds-focus: var(--mc-diamond);
   --cds-hover-primary: #208f3c;
   --cds-hover-secondary: #d5d1c3;
-  --cds-hover-ui: #243044;
-  --cds-selected-ui: #2f2f32;
+  --cds-hover-ui: var(--mc-dark-layer-hover);
+  --cds-selected-ui: var(--mc-dark-layer-accent);
   --cds-skeleton-01: #2f2f32;
   --cds-skeleton-02: #4b5563;
 }

@@ -1,5 +1,5 @@
-import { mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { mkdir, readdir } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { build, preview } from "vite";
@@ -12,10 +12,33 @@ await mkdir(outDir, { recursive: true });
 const require = createRequire(import.meta.url);
 let chromium;
 
-for (const candidate of [
-  "playwright",
-  "C:/Users/Floppy/scoop/persist/nodejs/cache/_npx/31e32ef8478fbf80/node_modules/playwright",
-]) {
+async function cachedPlaywrightCandidates() {
+  const cacheRoots = [
+    process.env.npm_config_cache,
+    process.env.npm_config_cache?.replaceAll("/", "\\"),
+    process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, "npm-cache"),
+    process.env.USERPROFILE && join(process.env.USERPROFILE, "scoop", "persist", "nodejs", "cache"),
+  ].filter(Boolean);
+  const candidates = [];
+
+  for (const cacheRoot of new Set(cacheRoots)) {
+    const npxRoot = join(cacheRoot, "_npx");
+    try {
+      const entries = await readdir(npxRoot, { withFileTypes: true });
+      candidates.push(
+        ...entries
+          .filter((entry) => entry.isDirectory())
+          .map((entry) => join(npxRoot, entry.name, "node_modules", "playwright")),
+      );
+    } catch {
+      // Try the next cache root.
+    }
+  }
+
+  return candidates;
+}
+
+for (const candidate of ["playwright", ...await cachedPlaywrightCandidates()]) {
   try {
     ({ chromium } = require(candidate));
     break;

@@ -22,6 +22,11 @@ MaxCraft theme tokens live in:
 | `--mc-redstone` | danger/progress/accent |
 | `--mc-ink` | light-theme text |
 | `--mc-paper` | light-theme page background |
+| `--mc-paper-soft` | refined light-theme application background |
+| `--mc-field`, `--mc-field-hover` | input and selection field surfaces |
+| `--mc-layer`, `--mc-layer-accent`, `--mc-layer-hover` | light-theme component surfaces |
+| `--mc-dark-background`, `--mc-dark-layer`, `--mc-dark-layer-accent`, `--mc-dark-layer-hover` | dark-theme application and component surfaces |
+| `--mc-shadow-inset`, `--mc-shadow-block`, `--mc-shadow-surface` | block-style depth tokens |
 
 ## Carbon Token Mapping
 
