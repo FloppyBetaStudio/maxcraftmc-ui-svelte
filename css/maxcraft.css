@@ -257,13 +257,14 @@ pre {
 .bx--header__name,
 .bx--header__menu-item,
 .bx--header__action {
+  background-color: transparent;
   color: #f9fafb;
   font-weight: 850;
 }
 
 .bx--header__global {
   min-width: 0;
-  background-color: var(--mc-bedrock-dark) !important;
+  background-color: transparent !important;
 }
 
 .bx--header__menu-item {

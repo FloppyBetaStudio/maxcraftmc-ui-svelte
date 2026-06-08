@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6
+
+- Unified the shell header's static background so the brand area and global
+  action area share the same MaxCraft dark material.
+
 ## 0.2.5
 
 - Stabilized gallery popover and truncation demo sizing across responsive
