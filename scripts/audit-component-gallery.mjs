@@ -67,21 +67,22 @@ function auditScript() {
     if (!match) return null;
     return match.slice(1, 4).map(Number);
   };
-  const effectiveBackground = (style) => {
-    if (!/rgba\(0,\s*0,\s*0,\s*0\)/.test(style.backgroundColor)) return style.backgroundColor;
-    const gradientColor = String(style.backgroundImage).match(/rgba?\(\d+,\s*\d+,\s*\d+(?:,\s*[\d.]+)?\)/);
-    return gradientColor ? gradientColor[0] : style.backgroundColor;
+  const colorStops = (value) => String(value).match(/rgba?\(\d+,\s*\d+,\s*\d+(?:,\s*[\d.]+)?\)/g) ?? [];
+  const effectiveBackgrounds = (style) => {
+    if (!/rgba\(0,\s*0,\s*0,\s*0\)/.test(style.backgroundColor)) return [style.backgroundColor];
+    const gradientColors = colorStops(style.backgroundImage);
+    return gradientColors.length ? gradientColors : [style.backgroundColor];
   };
   const nearestPaintedBackground = (el, boundary) => {
     let current = el;
     while (current) {
       const style = getComputedStyle(current);
-      const bg = effectiveBackground(style);
-      if (!/rgba\(0,\s*0,\s*0,\s*0\)/.test(bg)) return bg;
+      const bg = effectiveBackgrounds(style);
+      if (bg.some((color) => !/rgba\(0,\s*0,\s*0,\s*0\)/.test(color))) return bg;
       if (current === boundary) break;
       current = current.parentElement;
     }
-    return effectiveBackground(getComputedStyle(boundary ?? document.body));
+    return effectiveBackgrounds(getComputedStyle(boundary ?? document.body));
   };
   const luminance = ([r, g, b]) => {
     const channel = (value) => {
@@ -97,6 +98,10 @@ function auditScript() {
     const a = luminance(foreground);
     const b = luminance(background);
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  };
+  const worstContrast = (fg, backgrounds) => {
+    const ratios = backgrounds.map((bg) => contrast(fg, bg)).filter((ratio) => ratio !== null);
+    return ratios.length ? Math.min(...ratios) : null;
   };
   const pseudoBox = (el, pseudo) => {
     const rect = el.getBoundingClientRect();
@@ -217,15 +222,15 @@ function auditScript() {
   for (const el of document.querySelectorAll(".bx--tile--is-selected")) {
     if (!visible(el)) continue;
     const style = getComputedStyle(el);
-    const bg = effectiveBackground(style);
-    const ratio = contrast(style.color, bg);
+    const bg = effectiveBackgrounds(style);
+    const ratio = worstContrast(style.color, bg);
     if (ratio !== null && ratio < 4.5) {
       lowContrastSelectedTiles.push({
         tag: el.tagName,
         cls: String(el.className),
         text: (el.textContent || "").trim().slice(0, 80),
         color: style.color,
-        bg,
+        bg: bg.join(", "),
         ratio: Number(ratio.toFixed(2)),
       });
     }
@@ -237,13 +242,13 @@ function auditScript() {
       if (!visible(item)) continue;
       const itemStyle = getComputedStyle(item);
       const bg = nearestPaintedBackground(item, header);
-      const ratio = contrast(itemStyle.color, bg);
+      const ratio = worstContrast(itemStyle.color, bg);
       if (ratio !== null && ratio < 4.5) {
         visualRegressions.push({
           kind: "header-contrast",
           text: (item.textContent || item.getAttribute("aria-label") || "").trim().slice(0, 80),
           color: itemStyle.color,
-          bg,
+          bg: bg.join(", "),
           ratio: Number(ratio.toFixed(2)),
         });
       }

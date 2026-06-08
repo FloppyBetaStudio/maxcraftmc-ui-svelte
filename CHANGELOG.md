@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4
+
+- Increased contrast for primary and active controls inside the dark MaxCraft
+  shell header.
+- Updated gallery contrast auditing to check the weakest stop in gradient
+  backgrounds.
+
 ## 0.2.3
 
 - Restored the MaxCraft UI shell header to a dark title bar while preserving
