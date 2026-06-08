@@ -436,14 +436,16 @@
           <Portal>
             <div class="portal-surface portal-fixed">Portal 内容</div>
           </Portal>
-          <Popover open caret align="bottom-left" relative>
+          <Popover open caret align="bottom-left" relative class="gallery-popover">
             <Button size="small">Popover trigger</Button>
             <div class="popover-body">方块风格弹出层</div>
           </Popover>
           <TooltipDefinition term="钻石色 focus">键盘焦点统一用 diamond token。</TooltipDefinition>
           <TooltipIcon tooltipText="图标 tooltip" />
           <Link href="#inputs">锚点链接</Link>
-          <Truncate>这是一段会被截断的 MaxCraft UI 文本，用来覆盖 Truncate 组件。</Truncate>
+          <div class="truncate-demo">
+            <Truncate>这是一段会被截断的 MaxCraft UI 文本，用来覆盖 Truncate 组件。</Truncate>
+          </div>
         </div>
         <div class="grid">
           <SkeletonText paragraph lineCount={3} />
@@ -549,6 +551,18 @@
     min-width: 12rem;
     padding: 1rem;
     font-weight: 800;
+  }
+
+  :global(.gallery-popover) {
+    width: min(100%, 18rem);
+    min-width: 0;
+  }
+
+  .truncate-demo {
+    width: min(100%, 32rem);
+    min-width: 0;
+    max-width: 100%;
+    align-self: start;
   }
 
   :global(.header-action-label) {

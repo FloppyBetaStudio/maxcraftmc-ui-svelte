@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.5
+
+- Stabilized gallery popover and truncation demo sizing across responsive
+  widths.
+- Moved selected tile checkmarks to the lower-left corner and hid unselected
+  marks to avoid false checked affordances.
+- Preserved square checkbox, radio, and toggle controls during active and focus
+  states.
+
 ## 0.2.4
 
 - Increased contrast for primary and active controls inside the dark MaxCraft

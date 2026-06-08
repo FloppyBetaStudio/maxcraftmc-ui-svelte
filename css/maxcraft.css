@@ -964,6 +964,7 @@ a.bx--tile.bx--tile--clickable.bx--link:focus,
 }
 
 .bx--toggle-input:focus + .bx--toggle-input__label .bx--toggle__switch {
+  border-radius: 0;
   outline: 3px solid var(--mc-diamond);
   outline-offset: 2px;
 }
@@ -973,6 +974,7 @@ a.bx--tile.bx--tile--clickable.bx--link:focus,
 }
 
 .bx--toggle-input:not(:disabled) + .bx--toggle-input__label .bx--toggle__switch:active::after {
+  border-radius: 0;
   box-shadow: inset 0 4px rgb(0 0 0 / 0.24), inset 0 -2px rgb(255 255 255 / 0.18);
   transform: translateY(1px);
 }
@@ -1046,6 +1048,7 @@ a.bx--tile.bx--tile--clickable.bx--link:focus,
 
 .bx--checkbox:focus + .bx--checkbox-label::before,
 .bx--radio-button:focus + .bx--radio-button__label .bx--radio-button__appearance {
+  border-radius: 0;
   outline: 3px solid var(--mc-diamond);
   outline-offset: 2px;
 }
@@ -3224,14 +3227,57 @@ body {
 }
 
 .bx--tile__checkmark {
+  top: auto;
+  right: auto;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  display: inline-grid;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-items: center;
   border: 2px solid var(--mc-border);
+  border-radius: 0;
   background: var(--mc-grass);
   color: #ffffff;
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
   box-shadow: inset 0 2px rgb(255 255 255 / 0.18), inset 0 -2px rgb(0 0 0 / 0.18);
 }
 
+.bx--tile--is-selected .bx--tile__checkmark,
+.bx--tile-input:checked + .bx--tile .bx--tile__checkmark,
+.bx--tile-input:checked + .bx--radio-tile .bx--tile__checkmark {
+  opacity: 1;
+}
+
 .bx--tile__checkmark svg {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0;
   fill: currentColor;
+}
+
+.bx--toggle__switch,
+.bx--toggle__switch::before,
+.bx--toggle__switch::after,
+.bx--toggle-input:focus + .bx--toggle-input__label .bx--toggle__switch,
+.bx--toggle-input:active + .bx--toggle-input__label .bx--toggle__switch,
+.bx--toggle-input:not(:disabled) + .bx--toggle-input__label .bx--toggle__switch:active,
+.bx--toggle-input:not(:disabled) + .bx--toggle-input__label .bx--toggle__switch:active::before,
+.bx--toggle-input:not(:disabled) + .bx--toggle-input__label .bx--toggle__switch:active::after,
+.bx--checkbox-label::before,
+.bx--checkbox-label::after,
+.bx--checkbox:focus + .bx--checkbox-label::before,
+.bx--checkbox:active + .bx--checkbox-label::before,
+.bx--checkbox:checked + .bx--checkbox-label::before,
+.bx--checkbox:indeterminate + .bx--checkbox-label::before,
+.bx--radio-button__appearance,
+.bx--radio-button__appearance::before,
+.bx--radio-button:focus + .bx--radio-button__label .bx--radio-button__appearance,
+.bx--radio-button:checked + .bx--radio-button__label .bx--radio-button__appearance,
+.bx--radio-button:checked + .bx--radio-button__label .bx--radio-button__appearance::before {
+  border-radius: 0 !important;
 }
 
 .bx--tile__chevron {
