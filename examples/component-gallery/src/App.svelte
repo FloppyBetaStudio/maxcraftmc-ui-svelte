@@ -154,13 +154,13 @@
   let pageNav = 4;
   let rangeLow = 20;
   let rangeHigh = 72;
-  let dropdownOpen = true;
-  let comboOpen = true;
-  let multiOpen = true;
-  let overflowOpen = true;
-  let contextOpen = true;
+  let dropdownOpen = false;
+  let comboOpen = false;
+  let multiOpen = false;
+  let overflowOpen = false;
+  let contextOpen = false;
   let modalOpen = false;
-  let headerPanelOpen = true;
+  let headerPanelOpen = false;
   let search = "Steve";
   let headerSearch = "wiki";
   let selectValue = "survival";
@@ -170,6 +170,9 @@
   let groupChoices = ["remember", "alerts"];
   let sessionValue = "gallery-session";
   let floatingAnchor;
+  let floatingPortalOpen = false;
+  let portalOpen = false;
+  let popoverOpen = false;
   let notificationQueue;
 
   function showQueuedNotification() {
@@ -183,9 +186,6 @@
     });
   }
 
-  $: if (notificationQueue) {
-    showQueuedNotification();
-  }
 </script>
 
 <svelte:window on:maxcraft-gallery-open-modal={() => (modalOpen = true)} />
@@ -203,7 +203,6 @@
     </HeaderNav>
     <HeaderUtilities>
       <HeaderSearch
-        active
         bind:value={headerSearch}
         results={[
           { href: "#inputs", text: "输入控件", description: "Inputs" },
@@ -429,17 +428,22 @@
           <FileUploader labelTitle="上传配置" labelDescription="显示文件状态" buttonLabel="选择文件" bind:files status="complete" />
           <CodeSnippet type="single">npm install @ifloppy/maxcraftmc-ui-svelte</CodeSnippet>
           <CopyButton text="mc.maxcraft.org" />
-          <button class="portal-anchor" bind:this={floatingAnchor}>FloatingPortal anchor</button>
-          <FloatingPortal anchor={floatingAnchor} open intrinsicWidth direction="bottom" gapBottom={8}>
-            <div class="portal-surface">FloatingPortal 内容</div>
-          </FloatingPortal>
-          <Portal>
-            <div class="portal-surface portal-fixed">Portal 内容</div>
-          </Portal>
-          <Popover open caret align="bottom-left" relative class="gallery-popover">
-            <Button size="small">Popover trigger</Button>
-            <div class="popover-body">方块风格弹出层</div>
-          </Popover>
+          <div class="portal-demo">
+            <button class="portal-anchor" bind:this={floatingAnchor} on:click={() => (floatingPortalOpen = !floatingPortalOpen)}>FloatingPortal anchor</button>
+            <FloatingPortal anchor={floatingAnchor} open={floatingPortalOpen} intrinsicWidth direction="bottom" gapBottom={8}>
+              <div class="portal-surface">FloatingPortal 内容</div>
+            </FloatingPortal>
+            <Button kind="ghost" size="small" on:click={() => (portalOpen = !portalOpen)}>Portal trigger</Button>
+            {#if portalOpen}
+              <Portal>
+                <div class="portal-surface portal-fixed">Portal 内容</div>
+              </Portal>
+            {/if}
+            <Button size="small" on:click={() => (popoverOpen = !popoverOpen)}>Popover trigger</Button>
+            <Popover open={popoverOpen} caret align="bottom-left" relative class="gallery-popover">
+              <div class="popover-body">方块风格弹出层</div>
+            </Popover>
+          </div>
           <TooltipDefinition term="钻石色 focus">键盘焦点统一用 diamond token。</TooltipDefinition>
           <TooltipIcon tooltipText="图标 tooltip" />
           <Link href="#inputs">锚点链接</Link>
@@ -577,6 +581,13 @@
     flex-wrap: wrap;
   }
 
+  .portal-demo {
+    display: grid;
+    min-width: 0;
+    gap: 0.75rem;
+    align-items: start;
+  }
+
   .portal-surface {
     min-width: 12rem;
     padding: 0.75rem;
@@ -589,6 +600,7 @@
 
   .portal-anchor {
     min-height: 2.5rem;
+    margin-bottom: 3.5rem;
     padding: 0 1rem;
     border: 3px solid var(--mc-border);
     background: linear-gradient(var(--cds-layer, #ffffff), var(--cds-field, #d5d1c3));

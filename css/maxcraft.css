@@ -3216,6 +3216,12 @@ body {
   color: var(--mc-ink);
 }
 
+.bx--tile--selectable,
+.bx--radio-tile,
+.bx--selectable-tile {
+  padding-left: max(1rem, 3.25rem);
+}
+
 .bx--tile--is-selected h1,
 .bx--tile--is-selected h2,
 .bx--tile--is-selected h3,
