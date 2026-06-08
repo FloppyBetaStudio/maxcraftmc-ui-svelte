@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3
+
+- Restored the MaxCraft UI shell header to a dark title bar while preserving
+  readable active and hover states.
+- Improved the component gallery contrast audit for layered transparent header
+  controls.
+
 ## 0.2.2
 
 - Fixed ghost button hover and focus states so they keep MaxCraft green accents

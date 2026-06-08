@@ -72,6 +72,17 @@ function auditScript() {
     const gradientColor = String(style.backgroundImage).match(/rgba?\(\d+,\s*\d+,\s*\d+(?:,\s*[\d.]+)?\)/);
     return gradientColor ? gradientColor[0] : style.backgroundColor;
   };
+  const nearestPaintedBackground = (el, boundary) => {
+    let current = el;
+    while (current) {
+      const style = getComputedStyle(current);
+      const bg = effectiveBackground(style);
+      if (!/rgba\(0,\s*0,\s*0,\s*0\)/.test(bg)) return bg;
+      if (current === boundary) break;
+      current = current.parentElement;
+    }
+    return effectiveBackground(getComputedStyle(boundary ?? document.body));
+  };
   const luminance = ([r, g, b]) => {
     const channel = (value) => {
       const normalized = value / 255;
@@ -222,13 +233,10 @@ function auditScript() {
 
   for (const header of document.querySelectorAll(".bx--header")) {
     if (!visible(header)) continue;
-    const headerStyle = getComputedStyle(header);
-    const headerBg = effectiveBackground(headerStyle);
     for (const item of header.querySelectorAll(".bx--header__name, .bx--header__menu-item, .bx--header__action, .bx--header-search-button")) {
       if (!visible(item)) continue;
       const itemStyle = getComputedStyle(item);
-      const itemBg = effectiveBackground(itemStyle);
-      const bg = /rgba\(0,\s*0,\s*0,\s*0\)/.test(itemBg) ? headerBg : itemBg;
+      const bg = nearestPaintedBackground(item, header);
       const ratio = contrast(itemStyle.color, bg);
       if (ratio !== null && ratio < 4.5) {
         visualRegressions.push({
