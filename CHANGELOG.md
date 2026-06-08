@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- Reworked header colors so the light MaxCraft theme uses readable paper and
+  grass states instead of a mixed dark Carbon header.
+- Centered checked checkbox marks against the MaxCraft block checkbox frame.
+- Added gallery visual regression checks for header contrast, checkbox mark
+  centering, and pagination label centering.
+
 ## 0.2.0
 
 - Updated the compatibility baseline to `carbon-components-svelte@0.108.0`.

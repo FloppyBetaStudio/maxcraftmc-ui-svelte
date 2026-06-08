@@ -87,6 +87,22 @@ function auditScript() {
     const b = luminance(background);
     return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
   };
+  const pseudoBox = (el, pseudo) => {
+    const rect = el.getBoundingClientRect();
+    const style = getComputedStyle(el, pseudo);
+    const left = rect.left + parse(style.left);
+    const top = rect.top + parse(style.top);
+    const width = parse(style.width);
+    const height = parse(style.height);
+    return {
+      left,
+      top,
+      width,
+      height,
+      cx: left + width / 2,
+      cy: top + height / 2,
+    };
+  };
   const carbonBlues = new Set([
     "rgb(15, 98, 254)",
     "rgba(15, 98, 254, 1)",
@@ -118,6 +134,7 @@ function auditScript() {
   const thinControls = [];
   const badNumber = [];
   const lowContrastSelectedTiles = [];
+  const visualRegressions = [];
   for (const el of document.querySelectorAll("[class*='bx--']")) {
     if (!visible(el)) continue;
     const style = getComputedStyle(el);
@@ -203,6 +220,67 @@ function auditScript() {
     }
   }
 
+  for (const header of document.querySelectorAll(".bx--header")) {
+    if (!visible(header)) continue;
+    const headerStyle = getComputedStyle(header);
+    const headerBg = effectiveBackground(headerStyle);
+    for (const item of header.querySelectorAll(".bx--header__name, .bx--header__menu-item, .bx--header__action, .bx--header-search-button")) {
+      if (!visible(item)) continue;
+      const itemStyle = getComputedStyle(item);
+      const itemBg = effectiveBackground(itemStyle);
+      const bg = /rgba\(0,\s*0,\s*0,\s*0\)/.test(itemBg) ? headerBg : itemBg;
+      const ratio = contrast(itemStyle.color, bg);
+      if (ratio !== null && ratio < 4.5) {
+        visualRegressions.push({
+          kind: "header-contrast",
+          text: (item.textContent || item.getAttribute("aria-label") || "").trim().slice(0, 80),
+          color: itemStyle.color,
+          bg,
+          ratio: Number(ratio.toFixed(2)),
+        });
+      }
+    }
+  }
+
+  for (const input of document.querySelectorAll(".bx--checkbox:checked, .bx--checkbox:indeterminate")) {
+    const label = input.id ? document.querySelector(`label[for="${CSS.escape(input.id)}"]`) : input.nextElementSibling;
+    if (!label || !visible(label)) continue;
+    const box = pseudoBox(label, "::before");
+    const check = pseudoBox(label, "::after");
+    const dx = check.cx - box.cx;
+    const dy = check.cy - box.cy;
+    if (Math.abs(dx) > 0.75 || Math.abs(dy) > 0.75) {
+      visualRegressions.push({
+        kind: "checkbox-checkmark-center",
+        text: (label.textContent || "").trim().slice(0, 80),
+        dx: Number(dx.toFixed(2)),
+        dy: Number(dy.toFixed(2)),
+        box: { w: Number(box.width.toFixed(2)), h: Number(box.height.toFixed(2)) },
+        check: { w: Number(check.width.toFixed(2)), h: Number(check.height.toFixed(2)) },
+      });
+    }
+  }
+
+  for (const page of document.querySelectorAll(".bx--pagination-nav__page:not(.bx--pagination-nav__page--direction)")) {
+    if (!visible(page)) continue;
+    const span = page.querySelector("span");
+    if (!span || !visible(span)) continue;
+    const pageRect = page.getBoundingClientRect();
+    const spanRect = span.getBoundingClientRect();
+    const dx = spanRect.left + spanRect.width / 2 - (pageRect.left + pageRect.width / 2);
+    const dy = spanRect.top + spanRect.height / 2 - (pageRect.top + pageRect.height / 2);
+    if (Math.abs(dx) > 0.75 || Math.abs(dy) > 0.75) {
+      visualRegressions.push({
+        kind: "pagination-label-center",
+        text: span.textContent.trim().slice(0, 24),
+        dx: Number(dx.toFixed(2)),
+        dy: Number(dy.toFixed(2)),
+        page: { w: Number(pageRect.width.toFixed(2)), h: Number(pageRect.height.toFixed(2)) },
+        label: { w: Number(spanRect.width.toFixed(2)), h: Number(spanRect.height.toFixed(2)) },
+      });
+    }
+  }
+
   return {
     overflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),
     overflowElements: overflowElements.slice(0, 8),
@@ -212,6 +290,7 @@ function auditScript() {
     thinControls: thinControls.slice(0, 8),
     badNumber: badNumber.slice(0, 8),
     lowContrastSelectedTiles: lowContrastSelectedTiles.slice(0, 8),
+    visualRegressions: visualRegressions.slice(0, 8),
     counts: {
       overflowElements: overflowElements.length,
       rounded: rounded.length,
@@ -220,6 +299,7 @@ function auditScript() {
       thinControls: thinControls.length,
       badNumber: badNumber.length,
       lowContrastSelectedTiles: lowContrastSelectedTiles.length,
+      visualRegressions: visualRegressions.length,
     },
   };
 }
@@ -322,9 +402,10 @@ try {
           result.counts.invalidDefaultBg > 0 ||
           result.counts.thinControls > 0 ||
           result.counts.badNumber > 0 ||
-          result.counts.lowContrastSelectedTiles > 0;
+          result.counts.lowContrastSelectedTiles > 0 ||
+          result.counts.visualRegressions > 0;
         console.log(
-          `${failed ? "FAIL" : "PASS"} gallery ${theme} ${width} ${scenario} overflow=${result.overflow}/${result.counts.overflowElements} rounded=${result.counts.rounded} blue=${result.counts.blue} invalidBg=${result.counts.invalidDefaultBg} thin=${result.counts.thinControls} badNumber=${result.counts.badNumber} lowTileContrast=${result.counts.lowContrastSelectedTiles}`,
+          `${failed ? "FAIL" : "PASS"} gallery ${theme} ${width} ${scenario} overflow=${result.overflow}/${result.counts.overflowElements} rounded=${result.counts.rounded} blue=${result.counts.blue} invalidBg=${result.counts.invalidDefaultBg} thin=${result.counts.thinControls} badNumber=${result.counts.badNumber} lowTileContrast=${result.counts.lowContrastSelectedTiles} visual=${result.counts.visualRegressions}`,
         );
         if (failed) failures.push({ theme, width, scenario, result });
         await page.mouse.up().catch(() => {});
