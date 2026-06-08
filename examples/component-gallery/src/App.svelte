@@ -233,6 +233,7 @@
           <Button>主操作</Button>
           <Button kind="secondary">次操作</Button>
           <Button kind="tertiary">三层操作</Button>
+          <Button kind="ghost">幽灵操作</Button>
           <Button kind="danger">危险操作</Button>
           <Button disabled>禁用</Button>
         </ButtonSet>

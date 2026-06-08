@@ -205,6 +205,8 @@ pre {
 .bx--btn--ghost:hover,
 .bx--btn--ghost:focus {
   background: linear-gradient(#eef8e9, #dfead9);
+  color: var(--mc-grass-dark);
+  outline-color: var(--mc-diamond);
 }
 
 .bx--btn--danger,

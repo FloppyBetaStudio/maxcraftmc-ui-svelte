@@ -336,6 +336,14 @@ async function runScenario(page, name) {
     }
   }
 
+  if (name === "button-ghost-hover") {
+    const button = page.locator(".bx--btn--ghost:not(:disabled)").first();
+    const box = await button.boundingBox({ timeout: 1000 }).catch(() => null);
+    if (box) {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }
+  }
+
   if (name === "menus") {
     await page.locator(".bx--list-box__field").first().click({ timeout: 1000 }).catch(() => {});
     await page.locator(".bx--overflow-menu").first().click({ timeout: 1000 }).catch(() => {});
@@ -371,8 +379,8 @@ try {
   const browser = await chromium.launch({ headless: true, args: ["--no-proxy-server"] });
   const failures = [];
   const scenariosByWidth = new Map([
-    [390, ["initial", "focus", "date-picker", "copy-feedback", "tile-active", "button-active", "menus", "modal"]],
-    [774, ["initial", "focus", "date-picker", "menus", "modal"]],
+    [390, ["initial", "focus", "date-picker", "copy-feedback", "tile-active", "button-active", "button-ghost-hover", "menus", "modal"]],
+    [774, ["initial", "focus", "date-picker", "button-ghost-hover", "menus", "modal"]],
     [1366, ["initial", "modal"]],
   ]);
   for (const theme of ["light", "dark"]) {

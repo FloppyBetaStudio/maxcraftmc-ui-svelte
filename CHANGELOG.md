@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+- Fixed ghost button hover and focus states so they keep MaxCraft green accents
+  instead of reverting to Carbon blue.
+- Added a component gallery ghost-button hover scenario to catch blue hover
+  regressions.
+
 ## 0.2.1
 
 - Reworked header colors so the light MaxCraft theme uses readable paper and
