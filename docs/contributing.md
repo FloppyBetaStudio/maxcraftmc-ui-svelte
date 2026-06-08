@@ -13,7 +13,7 @@ npm run check
 ## What To Change First
 
 - For visual work, prefer `tokens/maxcraft.css` and `css/maxcraft.css`.
-- For API fixes, compare against `carbon-components-svelte@0.89.4`.
+- For API fixes, compare against `carbon-components-svelte@0.108.0`.
 - For docs, update README links and run `npm run check`.
 - For consumer integration, update the relevant consumer docs and checklist.
 
@@ -21,7 +21,7 @@ npm run check
 
 - Do not rename exported components.
 - Do not remove props, events, slots, or CSS entrypoints that exist in Carbon
-  Svelte 0.89.4.
+  Svelte 0.108.0.
 - Do not replace `carbon-icons-svelte`.
 - Do not introduce framework support beyond Svelte unless the package scope is
   explicitly changed.
@@ -46,7 +46,7 @@ npm run build
 
 The local checks cover:
 
-- exact export parity with `carbon-components-svelte@0.89.4`
+- exact export parity with `carbon-components-svelte@0.108.0`
 - export target existence
 - a Vite/Svelte smoke build with representative components
 - placeholder/stub marker scanning

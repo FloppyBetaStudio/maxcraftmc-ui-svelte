@@ -7,7 +7,7 @@
   $: attributes = {
     "aria-hidden": labelled ? undefined : true,
     role: labelled ? "img" : undefined,
-    focusable: Number($$props["tabindex"]) === 0 ? true : undefined,
+    focusable: Number($$props.tabindex) === 0 ? true : undefined,
   };
 </script>
 
@@ -21,7 +21,10 @@
   {...attributes}
   {...$$restProps}
 >
-  {#if title}<title>{title}</title>{/if}
-  <circle cx="8" cy="16" r="2"></circle><circle cx="16" cy="16" r="2"
-  ></circle><circle cx="24" cy="16" r="2"></circle>
+  {#if title}
+    <title>{title}</title>
+  {/if}
+  <circle cx="8" cy="16" r="2"></circle>
+  <circle cx="16" cy="16" r="2"></circle>
+  <circle cx="24" cy="16" r="2"></circle>
 </svg>

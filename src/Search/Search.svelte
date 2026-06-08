@@ -1,18 +1,21 @@
 <script>
   /**
+   * @template [T=any]
+   * @template [Icon=any]
    * @event {null} expand
    * @event {null} collapse
    * @restProps {input}
    */
 
   /**
-   * Specify the value of the search input
-   * @type {any}
+   * Specify the value of the search input.
+   * @type {T}
+   * @bindable writable
    */
-  export let value = "";
+  export let value = /** @type {T} */ ("");
 
   /**
-   * Specify the size of the search input
+   * Specify the size of the search input.
    * @type {"sm" | "lg" | "xl"}
    */
   export let size = "xl";
@@ -32,14 +35,17 @@
   /** Set to `true` to enable the expandable variant */
   export let expandable = false;
 
-  /** Set to `true to expand the search input */
+  /**
+   * Set to `true to expand the search input.
+   * @bindable writable
+   */
   export let expanded = false;
 
   /** Specify the `placeholder` attribute of the search input */
   export let placeholder = "Search...";
 
   /**
-   * Specify the `autocomplete` attribute
+   * Specify the `autocomplete` attribute.
    * @type {"on" | "off"}
    */
   export let autocomplete = "off";
@@ -55,15 +61,17 @@
 
   /**
    * Specify the icon to render.
-   * Defaults to `<Search />`
-   * @type {any}
+   * @type {Icon}
    */
-  export let icon = IconSearch;
+  export let icon = /** @type {Icon} */ (IconSearch);
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { createEventDispatcher } from "svelte";
@@ -74,9 +82,13 @@
   const dispatch = createEventDispatcher();
 
   let searchRef = null;
+  let prevExpanded = expanded;
 
   $: if (expanded && ref) ref.focus();
-  $: dispatch(expanded ? "expand" : "collapse");
+  $: if (expanded !== prevExpanded) {
+    dispatch(expanded ? "expand" : "collapse");
+    prevExpanded = expanded;
+  }
 </script>
 
 <!-- svelte-ignore a11y-autofocus -->
@@ -115,9 +127,7 @@
       <svelte:component this={icon} class="bx--search-magnifier-icon" />
     </div>
     <label id="{id}-search" for={id} class:bx--label={true}>
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
     <!-- svelte-ignore a11y-autofocus -->
     <input
@@ -145,15 +155,15 @@
         }
       }}
       on:keydown
-      on:keydown={({ key }) => {
-        if (key === "Escape") {
+      on:keydown={(event) => {
+        if (event.key === "Escape") {
           value = "";
           dispatch("clear");
         }
       }}
       on:keyup
       on:paste
-    />
+    >
     <button
       type="button"
       aria-label={closeButtonLabelText}

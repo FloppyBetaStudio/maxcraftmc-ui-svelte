@@ -1,19 +1,21 @@
 <script>
   /**
-   * Set the size of the input
+   * Set the size of the input.
    * @type {"sm" | "xl"}
    */
   export let size = undefined;
 
   /**
-   * Specify the input value
+   * Specify the input value.
    * @type {number | string}
+   * @bindable writable
    */
   export let value = "";
 
   /**
-   * Set to `"text"` to toggle the password visibility
+   * Set to `"text"` to toggle the password visibility.
    * @type {"text" | "password"}
+   * @bindable writable
    */
   export let type = "password";
 
@@ -27,13 +29,13 @@
   export let showPasswordLabel = "Show password";
 
   /**
-   * Set the alignment of the tooltip relative to the icon
+   * Set the alignment of the tooltip relative to the icon.
    * @type {"start" | "center" | "end"}
    */
   export let tooltipAlignment = "center";
 
   /**
-   * Set the position of the tooltip relative to the icon
+   * Set the position of the tooltip relative to the icon.
    * @type {"top" | "right" | "bottom" | "left"}
    */
   export let tooltipPosition = "bottom";
@@ -59,7 +61,7 @@
   /** Specify the text for the invalid state */
   export let invalidText = "";
 
-  /** Set to `true` to indicate an warning state */
+  /** Set to `true` to indicate a warning state */
   export let warn = false;
 
   /** Specify the warning state text */
@@ -69,29 +71,50 @@
   export let inline = false;
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Specify a name attribute for the input
+   * Specify a name attribute for the input.
    * @type {string}
    */
   export let name = undefined;
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
+  /**
+   * Set to `true` to render the tooltip in a portal,
+   * preventing it from being clipped by `overflow: hidden` containers.
+   * By default, the tooltip is portalled when inside a `Modal`.
+   * @type {boolean | undefined}
+   */
+  export let portalTooltip = undefined;
+
   import { getContext } from "svelte";
-  import WarningFilled from "../icons/WarningFilled.svelte";
-  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
   import View from "../icons/View.svelte";
   import ViewOff from "../icons/ViewOff.svelte";
+  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
+  import WarningFilled from "../icons/WarningFilled.svelte";
+  import PortalTooltip from "../Portal/PortalTooltip.svelte";
 
-  const ctx = getContext("Form");
+  const ctx = getContext("carbon:Form");
+  const insideModal = getContext("carbon:Modal");
 
   const isFluid = !!ctx && ctx.isFluid;
+  $: effectivePortalTooltip =
+    portalTooltip === undefined ? !!insideModal : portalTooltip;
+
+  /** @type {null | HTMLButtonElement} */
+  let toggleButtonRef = null;
+  let tooltipOpen = false;
+
   $: helperId = `helper-${id}`;
   $: errorId = `error-${id}`;
   $: warnId = `warn-${id}`;
+  $: tooltipLabel = type === "text" ? hidePasswordLabel : showPasswordLabel;
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -118,9 +141,7 @@
       class:bx--label--inline--sm={inline && size === "sm"}
       class:bx--label--inline--xl={inline && size === "xl"}
     >
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
     {#if !isFluid && helperText}
       <div
@@ -133,7 +154,7 @@
       </div>
     {/if}
   {/if}
-  {#if !inline && (labelText || $$slots.labelText)}
+  {#if !inline && (labelText || $$slots.labelChildren)}
     <label
       for={id}
       class:bx--label={true}
@@ -143,9 +164,7 @@
       class:bx--label--inline--sm={inline && size === "sm"}
       class:bx--label--inline--xl={inline && size === "xl"}
     >
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
   {/if}
   <div
@@ -193,23 +212,22 @@
         {...$$restProps}
         on:change
         on:input
-        on:input={({ target }) => {
-          value = target.value;
+        on:input={(event) => {
+          value = event.target.value;
         }}
         on:keydown
         on:keyup
         on:focus
         on:blur
         on:paste
-      />
+      >
       {#if isFluid && invalid}
-        <hr class="bx--text-input__divider" />
-        <div class="bx--form-requirement" id={errorId}>
-          {invalidText}
-        </div>
+        <hr class="bx--text-input__divider">
+        <div class="bx--form-requirement" id={errorId}>{invalidText}</div>
       {/if}
       {#if !(isFluid && invalid)}
         <button
+          bind:this={toggleButtonRef}
           type="button"
           {disabled}
           class:bx--text-input--password__visibility__toggle={true}
@@ -218,6 +236,7 @@
           class:bx--btn--disabled={disabled}
           class:bx--tooltip__trigger={true}
           class:bx--tooltip--a11y={true}
+          class:bx--tooltip--portal-active={effectivePortalTooltip}
           class:bx--tooltip--top={tooltipPosition === "top"}
           class:bx--tooltip--right={tooltipPosition === "right"}
           class:bx--tooltip--bottom={tooltipPosition === "bottom"}
@@ -225,16 +244,25 @@
           class:bx--tooltip--align-start={tooltipAlignment === "start"}
           class:bx--tooltip--align-center={tooltipAlignment === "center"}
           class:bx--tooltip--align-end={tooltipAlignment === "end"}
+          aria-label={effectivePortalTooltip ? tooltipLabel : undefined}
           on:click={() => {
             type = type === "password" ? "text" : "password";
           }}
+          on:mouseenter={() => {
+            tooltipOpen = true;
+          }}
+          on:mouseleave={() => {
+            tooltipOpen = false;
+          }}
+          on:focus={() => {
+            tooltipOpen = true;
+          }}
+          on:blur={() => {
+            tooltipOpen = false;
+          }}
         >
-          {#if !disabled}
-            <span class:bx--assistive-text={true}>
-              {#if type === "text"}
-                {hidePasswordLabel}
-              {:else}{showPasswordLabel}{/if}
-            </span>
+          {#if !disabled && !effectivePortalTooltip}
+            <span class:bx--assistive-text={true}> {tooltipLabel} </span>
           {/if}
           {#if type === "text"}
             <ViewOff class="bx--icon-visibility-off" />
@@ -245,9 +273,7 @@
       {/if}
     </div>
     {#if !isFluid && invalid}
-      <div class:bx--form-requirement={true} id={errorId}>
-        {invalidText}
-      </div>
+      <div class:bx--form-requirement={true} id={errorId}>{invalidText}</div>
     {/if}
     {#if !invalid && !warn && !isFluid && !inline && helperText}
       <div
@@ -263,3 +289,12 @@
     {/if}
   </div>
 </div>
+
+{#if effectivePortalTooltip && !disabled}
+  <PortalTooltip
+    anchor={toggleButtonRef}
+    direction={tooltipPosition === "top" ? "top" : "bottom"}
+    open={tooltipOpen}
+    text={tooltipLabel}
+  />
+{/if}

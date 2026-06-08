@@ -1,20 +1,27 @@
 <script>
+  /**
+   * @template [Icon=any]
+   */
+
   /** Set to `true` to use the active state */
   export let linkIsActive = false;
 
   /**
-   * Specify the `href` attribute
+   * Specify the `href` attribute.
    * @type {string}
    */
   export let href = undefined;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
-  /** Obtain a reference to the HTML anchor element */
+  /**
+   * Obtain a reference to the HTML anchor element.
+   * @bindable readonly
+   */
   export let ref = null;
 </script>
 
@@ -27,17 +34,5 @@
   {...$$restProps}
   on:click
 >
-  <slot name="icon">
-    <svelte:component this={icon} size={20} />
-  </slot>
+  <slot name="icon"><svelte:component this={icon} size={20} /></slot>
 </a>
-
-<style>
-  :global(.bx--header__action) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /** Hot fix to align icon with `HeaderAction` */
-    padding-bottom: 2px;
-  }
-</style>

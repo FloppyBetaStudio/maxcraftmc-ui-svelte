@@ -1,12 +1,16 @@
 <script>
   /**
-   * Specify the option value
-   * @type {string | number}
+   * @template {string | number} [Value=string | number]
+   */
+
+  /**
+   * Specify the option value.
+   * @type {Value}
    */
   export let value = "";
 
   /**
-   * Specify the option text
+   * Specify the option text.
    * If not specified, the value will be used as the text.
    * @type {string}
    */
@@ -21,21 +25,22 @@
   let className = undefined;
 
   /**
-   * Specify the class of the `option` element
+   * Specify the class of the `option` element.
    * @type {string}
    */
   export { className as class };
 
   /**
-   * Specify the style of the `option` element
+   * Specify the style of the `option` element.
    * @type {string}
    */
   export let style = undefined;
 
   import { getContext, onMount } from "svelte";
 
-  const id = "ccs-" + Math.random().toString(36);
-  const ctx = getContext("Select") || getContext("TimePickerSelect");
+  const id = `ccs-${Math.random().toString(36)}`;
+  const ctx =
+    getContext("carbon:Select") || getContext("carbon:TimePickerSelect");
 
   $: ctx?.setDefaultValue?.(id, value);
 

@@ -1,0 +1,27 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["div"];
+
+type $Props = {
+  /**
+   * Set the type of code snippet.
+   * @default "single"
+   */
+  type?: "single" | "multi";
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type CodeSnippetSkeletonProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class CodeSnippetSkeleton extends SvelteComponentTyped<
+  CodeSnippetSkeletonProps,
+  {
+    click: WindowEventMap["click"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  Record<string, never>
+> {}

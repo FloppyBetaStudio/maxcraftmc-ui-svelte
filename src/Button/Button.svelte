@@ -1,18 +1,23 @@
 <script>
   /**
-   * @extends {"./ButtonSkeleton.svelte"} ButtonSkeletonProps
-   * @restProps {button | a | div}
-   * @slot {{ props: { role: "button"; type?: string; tabindex: any; disabled: boolean; href?: string; class: string; [key: string]: any; } }}
+   * @template [Icon=any]
    */
 
   /**
-   * Specify the kind of button
+   * @extends {"./ButtonSkeleton.svelte"} ButtonSkeletonProps
+   * @restProps {button | a | div}
+   * @slot {{ props: { role: "button"; type?: string; tabindex: any; disabled: boolean; href?: string; class: string; [key: string]: any; } }}
+   * @slot {{ style: undefined | string; }} icon
+   */
+
+  /**
+   * Specify the kind of button.
    * @type {"primary" | "secondary" | "tertiary" | "ghost" | "danger" | "danger-tertiary" | "danger-ghost"}
    */
   export let kind = "primary";
 
   /**
-   * Specify the size of button
+   * Specify the size of button.
    * @type {"default" | "field" | "small" | "lg" | "xl"}
    */
   export let size = "default";
@@ -21,40 +26,59 @@
   export let expressive = false;
 
   /**
-   * Set to `true` to enable the selected state for an icon-only, ghost button
+   * Set to `true` to enable the selected state for an icon-only, ghost button.
    */
   export let isSelected = false;
 
   /**
-   * Specify the icon to render
-   * Alternatively, use the named slot "icon" (e.g., `<Icon slot="icon" size="{20}" />`)
+   * Specify the icon to render.
+   * Alternatively, use the named slot "icon".
    *
-   * @type {any}
+   * @type {Icon}
+   * @example
+   * ```svelte
+   * <Button>
+   *   <Icon slot="icon" size={20} />
+   * </Button>
+   * ```
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
   /**
-   * Specify the ARIA label for the button icon
+   * Specify the ARIA label for the button icon.
    * @type {string}
    */
   export let iconDescription = undefined;
 
   /**
    * Set the alignment of the tooltip relative to the icon.
-   * Only applies to icon-only buttons
+   * Only applies to icon-only buttons.
    * @type {"start" | "center" | "end"}
    */
   export let tooltipAlignment = "center";
 
   /**
-   * Set the position of the tooltip relative to the icon
+   * Set the position of the tooltip relative to the icon.
    * @type {"top" | "right" | "bottom" | "left"}
    */
   export let tooltipPosition = "bottom";
 
   /**
-   * Set to `true` to render a custom HTML element
-   * Props are destructured as `props` in the default slot (e.g., <Button let:props><div {...props}>...</div></Button>)
+   * Set to `true` to hide the tooltip while maintaining accessibility.
+   * Only applies to icon-only buttons.
+   * When `true`, the tooltip is visually hidden but the `iconDescription` remains accessible to screen readers.
+   */
+  export let hideTooltip = false;
+
+  /**
+   * Set to `true` to render a custom HTML element.
+   * Props are destructured as `props` in the default slot.
+   * @example
+   * ```svelte
+   * <Button let:props>
+   *   <div {...props}>Custom Element</div>
+   * </Button>
+   * ```
    */
   export let as = false;
 
@@ -65,66 +89,104 @@
   export let disabled = false;
 
   /**
-   * Set the `href` to use an anchor link
+   * Set the `href` to use an anchor link.
    * @type {string}
    */
   export let href = undefined;
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /** Specify the `type` attribute for the button element */
   export let type = "button";
 
-  /** Obtain a reference to the HTML element */
+  /**
+   * Obtain a reference to the HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
+  import { get } from "svelte/store";
   import ButtonSkeleton from "./ButtonSkeleton.svelte";
+  import { activeButtonTooltip } from "./button-tooltip-store.js";
 
-  const ctx = getContext("ComposedModal");
+  const ctx = getContext("carbon:ComposedModal");
 
   $: if (ctx && ref) {
     ctx.declareRef(ref);
   }
   $: hasIconOnly = (icon || $$slots.icon) && !$$slots.default;
+
+  const tooltipId = {};
+
+  $: tooltipHidden =
+    hasIconOnly &&
+    !hideTooltip &&
+    $activeButtonTooltip !== null &&
+    $activeButtonTooltip !== tooltipId;
+
+  function handleMouseEnter() {
+    if (hasIconOnly && !hideTooltip) {
+      activeButtonTooltip.set(tooltipId);
+    }
+  }
+
+  function handleMouseLeave() {
+    if ($activeButtonTooltip === tooltipId) {
+      activeButtonTooltip.set(null);
+    }
+  }
+
+  onMount(() => {
+    return () => {
+      if (get(activeButtonTooltip) === tooltipId) {
+        activeButtonTooltip.set(null);
+      }
+    };
+  });
+
+  $: isDisabled = Boolean(disabled);
   $: iconProps = {
     "aria-hidden": "true",
     class: "bx--btn__icon",
-    "aria-label": iconDescription,
   };
   $: buttonProps = {
-    type: href && !disabled ? undefined : type,
+    type: href && !isDisabled ? undefined : type,
     tabindex,
-    disabled: disabled === true ? true : undefined,
-    href,
+    disabled: isDisabled ? true : undefined,
+    href: href && !isDisabled ? href : undefined,
+    rel:
+      href && !isDisabled && $$restProps.target === "_blank"
+        ? "noopener noreferrer"
+        : undefined,
     "aria-pressed":
       hasIconOnly && kind === "ghost" && !href ? isSelected : undefined,
     ...$$restProps,
     class: [
       "bx--btn",
       expressive && "bx--btn--expressive",
-      ((size === "small" && !expressive) ||
-        (size === "sm" && !expressive) ||
-        (size === "small" && !expressive)) &&
-        "bx--btn--sm",
-      (size === "field" && !expressive) ||
-        (size === "md" && !expressive && "bx--btn--md"),
-      size === "field" && "bx--btn--field",
       size === "small" && "bx--btn--sm",
+      size === "field" && "bx--btn--field",
       size === "lg" && "bx--btn--lg",
       size === "xl" && "bx--btn--xl",
       kind && `bx--btn--${kind}`,
-      disabled && "bx--btn--disabled",
+      isDisabled && "bx--btn--disabled",
       hasIconOnly && "bx--btn--icon-only",
-      hasIconOnly && "bx--tooltip__trigger",
-      hasIconOnly && "bx--tooltip--a11y",
+      hasIconOnly && !hideTooltip && "bx--tooltip__trigger",
+      hasIconOnly && !hideTooltip && "bx--tooltip--a11y",
       hasIconOnly &&
+        !hideTooltip &&
         tooltipPosition &&
         `bx--btn--icon-only--${tooltipPosition}`,
       hasIconOnly &&
+        !hideTooltip &&
         tooltipAlignment &&
         `bx--tooltip--align-${tooltipAlignment}`,
+      hasIconOnly && !hideTooltip && tooltipHidden && "bx--tooltip--hidden",
       hasIconOnly && isSelected && kind === "ghost" && "bx--btn--selected",
       $$restProps.class,
     ]
@@ -149,7 +211,7 @@
   />
 {:else if as}
   <slot props={buttonProps} />
-{:else if href && !disabled}
+{:else if href && !isDisabled}
   <!-- svelte-ignore a11y-missing-attribute -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <a
@@ -160,10 +222,14 @@
     on:blur
     on:mouseover
     on:mouseenter
+    on:mouseenter={handleMouseEnter}
     on:mouseleave
+    on:mouseleave={handleMouseLeave}
   >
     {#if hasIconOnly}
-      <span class:bx--assistive-text={true}>{iconDescription}</span>
+      <span class:bx--assistive-text={true} style:pointer-events="none">
+        {iconDescription}
+      </span>
     {/if}
     <slot />
     {#if $$slots.icon}
@@ -182,6 +248,7 @@
   </a>
 {:else}
   <button
+    type="button"
     bind:this={ref}
     {...buttonProps}
     on:click
@@ -189,10 +256,14 @@
     on:blur
     on:mouseover
     on:mouseenter
+    on:mouseenter={handleMouseEnter}
     on:mouseleave
+    on:mouseleave={handleMouseLeave}
   >
     {#if hasIconOnly}
-      <span class:bx--assistive-text={true}>{iconDescription}</span>
+      <span class:bx--assistive-text={true} style:pointer-events="none">
+        {iconDescription}
+      </span>
     {/if}
     <slot />
     {#if $$slots.icon}

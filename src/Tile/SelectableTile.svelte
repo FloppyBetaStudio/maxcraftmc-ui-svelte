@@ -4,7 +4,10 @@
    * @event {string} "deselect"
    */
 
-  /** Set to `true` to select the tile */
+  /**
+   * Set to `true` to select the tile.
+   * @bindable writable
+   */
   export let selected = false;
 
   /** Set to `true` to enable the light variant */
@@ -19,30 +22,56 @@
   /** Specify the value of the selectable tile */
   export let value = "value";
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /** Specify the ARIA label for the selectable tile checkmark icon */
   export let iconDescription = "Tile checkmark";
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Specify a name attribute for the input
+   * Specify a name attribute for the input.
    * @type {string}
    */
   export let name = "";
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
+  import { readable } from "svelte/store";
   import CheckmarkFilled from "../icons/CheckmarkFilled.svelte";
 
   const dispatch = createEventDispatcher();
 
-  $: if (!disabled) dispatch(selected ? "select" : "deselect", id);
+  const ctx = getContext("carbon:SelectableTileGroup");
+  const hasGroup = ctx !== undefined;
+  const add = ctx?.add ?? (() => {});
+  const remove = ctx?.remove ?? (() => {});
+  const update = ctx?.update ?? (() => {});
+  const selectedValues = ctx?.selectedValues ?? readable([]);
+  const groupName = ctx?.groupName ?? readable(undefined);
+
+  add({ value, selected });
+
+  let prevValue = value;
+
+  $: if (hasGroup) {
+    if (value !== prevValue) {
+      remove(prevValue);
+      add({ value, selected });
+      prevValue = value;
+    }
+    selected = $selectedValues.includes(value);
+  }
 </script>
 
 <input
@@ -53,16 +82,34 @@
   checked={selected}
   {id}
   {value}
-  {name}
+  name={$groupName ?? name}
   {title}
   {disabled}
-/>
+  on:change={() => {
+    if (disabled) return;
+    if (!ref) return;
+    const newSelected = ref.checked;
+    selected = newSelected;
+    if (hasGroup) {
+      update({ value, selected: newSelected });
+    } else {
+      if (newSelected) {
+        dispatch("select", id);
+      } else {
+        dispatch("deselect", id);
+      }
+    }
+  }}
+>
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <label
   for={id}
   tabindex={disabled ? undefined : tabindex}
+  role="checkbox"
+  aria-checked={selected}
+  aria-disabled={disabled || undefined}
   class:bx--tile={true}
   class:bx--tile--selectable={true}
   class:bx--tile--is-selected={selected}
@@ -72,24 +119,39 @@
   on:click
   on:click|preventDefault={() => {
     if (disabled) return;
-    selected = !selected;
+    const newSelected = !selected;
+    selected = newSelected;
+
+    if (ref) {
+      ref.checked = newSelected;
+    }
+
+    if (hasGroup) {
+      update({ value, selected: newSelected });
+    } else {
+      if (newSelected) {
+        dispatch("select", id);
+      } else {
+        dispatch("deselect", id);
+      }
+    }
   }}
   on:mouseover
   on:mouseenter
   on:mouseleave
   on:keydown
-  on:keydown={(e) => {
+  on:keydown={(event) => {
     if (disabled) return;
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      selected = !selected;
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      if (ref) {
+        ref.click();
+      }
     }
   }}
 >
-  <span class:bx--tile__checkmark={true}>
+  <span aria-hidden="true" class:bx--tile__checkmark={true}>
     <CheckmarkFilled aria-label={iconDescription} title={iconDescription} />
   </span>
-  <span class:bx--tile-content={true}>
-    <slot />
-  </span>
+  <span class:bx--tile-content={true}> <slot /> </span>
 </label>

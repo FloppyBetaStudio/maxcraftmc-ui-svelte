@@ -1,11 +1,17 @@
 <script>
   /**
-   * @event {{ page: number; }} change - fires after every user interaction
-   * @event {{ page: number; }} click:button--previous
-   * @event {{ page: number; }} click:button--next
+   * @event change - Fires after every user interaction
+   * @property {number} page
+   * @event click:button--previous
+   * @property {number} page
+   * @event click:button--next
+   * @property {number} page
    */
 
-  /** Specify the current page index */
+  /**
+   * Specify the current page index.
+   * @bindable writable
+   */
   export let page = 1;
 
   /** Specify the total number of pages */
@@ -30,11 +36,11 @@
   export let tooltipPosition = "bottom";
 
   import { createEventDispatcher } from "svelte";
+  import Button from "../Button/Button.svelte";
   import CaretLeft from "../icons/CaretLeft.svelte";
   import CaretRight from "../icons/CaretRight.svelte";
   import PaginationItem from "./PaginationItem.svelte";
   import PaginationOverflow from "./PaginationOverflow.svelte";
-  import Button from "../Button/Button.svelte";
 
   const dispatch = createEventDispatcher();
   const MIN = 4;
@@ -72,7 +78,7 @@
   // all enumerable items to render in between
   // overflow menus
   $: items = Array.from({ length: total })
-    .map((e, i) => i)
+    .map((_item, i) => i)
     .slice(startOffset + front, (back + 1) * -1);
 </script>
 
@@ -116,8 +122,8 @@
     <PaginationOverflow
       fromIndex={startOffset}
       count={front}
-      on:select={({ detail }) => {
-        page = detail.index;
+      on:select={(event) => {
+        page = event.detail.index;
         dispatch("change", { page });
       }}
     />
@@ -130,14 +136,14 @@
           dispatch("change", { page });
         }}
       >
-        {page === item ? "Active, Page" : "Page"}
+        {page === item + 1 ? "Active, Page" : "Page"}
       </PaginationItem>
     {/each}
     <PaginationOverflow
       fromIndex={total - back - 1}
       count={back}
-      on:select={({ detail }) => {
-        page = detail.index;
+      on:select={(event) => {
+        page = event.detail.index;
         dispatch("change", { page });
       }}
     />
@@ -182,9 +188,6 @@
     aria-atomic="true"
     class:bx--pagination-nav__accessibility-label={true}
   >
-    Page
-    {page + 1}
-    of
-    {total}
+    Page {page}{" of "}{total}
   </div>
 </nav>

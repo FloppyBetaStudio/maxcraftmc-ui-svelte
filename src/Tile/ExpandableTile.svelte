@@ -1,14 +1,23 @@
 <script>
-  /** Set to `true` to expand the tile */
+  /**
+   * Set to `true` to expand the tile.
+   * @bindable writable
+   */
   export let expanded = false;
 
   /** Set to `true` to enable the light variant */
   export let light = false;
 
-  /** Specify the max height of the tile  (number of pixels) */
+  /**
+   * Specify the max height of the tile  (number of pixels).
+   * @bindable writable
+   */
   export let tileMaxHeight = 0;
 
-  /** Specify the padding of the tile (number of pixels) */
+  /**
+   * Specify the padding of the tile (number of pixels).
+   * @bindable writable
+   */
   export let tilePadding = 0;
 
   /** Specify the icon text of the collapsed tile */
@@ -23,13 +32,27 @@
   /** Specify the icon label of the collapsed tile */
   export let tileCollapsedLabel = "";
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /** Set an id for the top-level div element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the top-level element */
+  /**
+   * Set to `true` if the tile contains interactive content
+   * (e.g., links, buttons, inputs). The tile will render as
+   * a `div` instead of a `button` to avoid invalid HTML nesting,
+   * and the expand/collapse toggle moves to the chevron button.
+   */
+  export let hasInteractiveContent = false;
+
+  /**
+   * Obtain a reference to the top-level element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { afterUpdate, onMount } from "svelte";
@@ -42,7 +65,9 @@
       tileMaxHeight = elem.contentRect.height;
     });
 
-    resizeObserver.observe(refAbove);
+    if (refAbove) {
+      resizeObserver.observe(refAbove);
+    }
 
     return () => {
       resizeObserver.disconnect();
@@ -50,35 +75,39 @@
   });
 
   afterUpdate(() => {
-    if (tileMaxHeight === 0) {
+    if (!ref) return;
+
+    if (tileMaxHeight === 0 && refAbove) {
       tileMaxHeight = refAbove.getBoundingClientRect().height;
     }
 
     const style = getComputedStyle(ref);
 
     tilePadding =
-      parseInt(style.getPropertyValue("padding-top"), 10) +
-      parseInt(style.getPropertyValue("padding-bottom"), 10);
+      Number.parseInt(style.getPropertyValue("padding-top"), 10) +
+      Number.parseInt(style.getPropertyValue("padding-bottom"), 10);
   });
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-<button
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<svelte:element
+  this={hasInteractiveContent ? "div" : "button"}
   bind:this={ref}
-  type="button"
+  type={hasInteractiveContent ? undefined : "button"}
   {id}
-  aria-expanded={expanded}
-  {tabindex}
-  title={expanded ? tileExpandedIconText : tileCollapsedIconText}
+  aria-expanded={hasInteractiveContent ? undefined : expanded}
+  tabindex={hasInteractiveContent ? undefined : tabindex}
+  title={hasInteractiveContent ? undefined : (expanded ? tileExpandedIconText : tileCollapsedIconText)}
   class:bx--tile={true}
   class:bx--tile--expandable={true}
   class:bx--tile--is-expanded={expanded}
   class:bx--tile--light={light}
-  style:max-height={expanded ? "none" : `${tileMaxHeight + tilePadding}px`}
+  style:max-height={expanded || tileMaxHeight <= 0 ? "none" : `${tileMaxHeight + tilePadding}px`}
   {...$$restProps}
   on:click
   on:click={() => {
-    expanded = !expanded;
+    if (!hasInteractiveContent) expanded = !expanded;
   }}
   on:keypress
   on:mouseover
@@ -91,14 +120,23 @@
         <slot name="above" />
       </span>
     </div>
-    <div class:bx--tile__chevron={true}>
+    <svelte:element
+      this={hasInteractiveContent ? "button" : "div"}
+      type={hasInteractiveContent ? "button" : undefined}
+      class:bx--tile__chevron={true}
+      aria-expanded={hasInteractiveContent ? expanded : undefined}
+      title={hasInteractiveContent ? (expanded ? tileExpandedIconText : tileCollapsedIconText) : undefined}
+      on:click={() => {
+        if (hasInteractiveContent) expanded = !expanded;
+      }}
+    >
       <span>{expanded ? tileExpandedLabel : tileCollapsedLabel}</span>
       <ChevronDown />
-    </div>
+    </svelte:element>
     <div class:bx--tile-content={true}>
       <span class:bx--tile-content__below-the-fold={true}>
         <slot name="below" />
       </span>
     </div>
   </div>
-</button>
+</svelte:element>

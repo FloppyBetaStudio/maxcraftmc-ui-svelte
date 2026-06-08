@@ -1,6 +1,10 @@
 <script>
   /**
-   * Specify the ARIA label for the button
+   * @template [Icon=any]
+   */
+
+  /**
+   * Specify the ARIA label for the button.
    * @type {string}
    */
   export let ariaLabel = undefined;
@@ -10,17 +14,15 @@
 
   /**
    * Specify the icon to render for the closed state.
-   * Defaults to `<Menu size={20} />`
-   * @type {any}
+   * @type {Icon}
    */
-  export let iconMenu = Menu;
+  export let iconMenu = /** @type {Icon} */ (Menu);
 
   /**
    * Specify the icon to render for the opened state.
-   * Defaults to `<Close size={20} />`
-   * @type {any}
+   * @type {Icon}
    */
-  export let iconClose = Close;
+  export let iconClose = /** @type {Icon} */ (Close);
 
   /** Obtain a reference to the HTML button element */
   export let ref = null;

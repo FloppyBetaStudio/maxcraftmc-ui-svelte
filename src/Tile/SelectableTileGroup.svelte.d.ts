@@ -1,0 +1,71 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+export type CarbonSelectableTileGroupContext<T extends string = string> = {
+  selectedValues: import("svelte/store").Writable<T[]>;
+  groupName: import("svelte/store").Readable<string | undefined>;
+  add: (data: { selected: boolean; value: T }) => void;
+  remove: (value: T) => void;
+  update: (data: { value: T; selected: boolean }) => void;
+};
+
+type $RestProps = SvelteHTMLElements["fieldset"];
+
+type $Props<T extends string = string> = {
+  /**
+   * Specify the selected tile values.
+   * @default []
+   */
+  selected?: T[];
+
+  /**
+   * Set to `true` to disable the tile group
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Specify a name attribute for the checkbox inputs.
+   * @default undefined
+   */
+  name?: string | undefined;
+
+  /**
+   * Specify the legend text.
+   * Alternatively, use the named slot "legendChildren".
+   * @example
+   * ```svelte
+   * <SelectableTileGroup>
+   *   <span slot="legendChildren">Custom Legend</span>
+   * </SelectableTileGroup>
+   * ```
+   * @default ""
+   */
+  legendText?: string;
+
+  /**
+   * Set to `true` to visually hide the legend
+   * @default false
+   */
+  hideLegend?: boolean;
+
+  legendChildren?: (this: void) => void;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type SelectableTileGroupProps<T extends string = string> = Omit<
+  $RestProps,
+  keyof $Props<T>
+> &
+  $Props<T>;
+
+export default class SelectableTileGroup<
+  T extends string = string,
+> extends SvelteComponentTyped<
+  SelectableTileGroupProps<T>,
+  { deselect: CustomEvent<T>; select: CustomEvent<T> },
+  { default: Record<string, never>; legendChildren: Record<string, never> }
+> {}

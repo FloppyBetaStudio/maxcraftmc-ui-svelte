@@ -1,9 +1,7 @@
 <script>
-  /** @extends {"./DataTable.svelte"} DataTableHeader */
-
   /**
-   * Specify the number of columns
-   * Superseded by `headers` if `headers` is a non-empty array
+   * Specify the number of columns.
+   * Superseded by `headers` if `headers` is a non-empty array.
    */
   export let columns = 5;
 
@@ -11,7 +9,7 @@
   export let rows = 5;
 
   /**
-   * Set the size of the data table
+   * Set the size of the data table.
    * @type {"compact" | "short" | "tall"}
    */
   export let size = undefined;
@@ -23,9 +21,9 @@
   export let showHeader = true;
 
   /**
-   * Set the column headers
-   * Supersedes `columns` if value is a non-empty array
-   * @type {ReadonlyArray<string | Partial<DataTableHeader>>}
+   * Set the column headers.
+   * Supersedes `columns` if value is a non-empty array.
+   * @type {ReadonlyArray<string | Partial<import('./DataTable.svelte').DataTableHeader>>}
    */
   export let headers = [];
 
@@ -33,7 +31,7 @@
   export let showToolbar = true;
 
   $: values = headers.map((header) =>
-    header.value !== undefined ? header.value : header,
+    header.value === undefined ? header : header.value,
   );
   $: cols = Array.from(
     { length: headers.length > 0 ? headers.length : columns },

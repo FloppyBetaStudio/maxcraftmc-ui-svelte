@@ -1,6 +1,6 @@
 <script>
   /**
-   * Set the size of the table
+   * Set the size of the table.
    * @type {"compact" | "short" | "medium" | "tall"}
    */
   export let size = undefined;
@@ -18,14 +18,25 @@
   export let stickyHeader = false;
 
   /**
-   * Set the style attribute on the `table` element
+   * Set the style attribute on the `table` element.
    * @type {string}
    */
   export let tableStyle = undefined;
+
+  /**
+   * Obtain a reference to the section HTML element (when stickyHeader is enabled) or table HTML element.
+   * @type {null | HTMLElement | HTMLTableElement}
+   * @bindable readonly
+   */
+  export let ref = null;
 </script>
 
 {#if stickyHeader}
-  <section class:bx--data-table_inner-container={true} {...$$restProps}>
+  <section
+    class:bx--data-table_inner-container={true}
+    bind:this={ref}
+    {...$$restProps}
+  >
     <table
       class:bx--data-table={true}
       class:bx--data-table--compact={size === "compact"}

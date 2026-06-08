@@ -1,8 +1,8 @@
 # @ifloppy/maxcraftmc-ui-svelte
 
-MaxCraft themed compatibility build of `carbon-components-svelte@0.89.4`.
+MaxCraft themed compatibility build of `carbon-components-svelte@0.108.0`.
 
-This package intentionally preserves the Carbon Svelte 0.89.4 component names,
+This package intentionally preserves the Carbon Svelte 0.108.0 component names,
 exports, CSS entrypoints, types, props, events, and slot surface so existing
 Svelte apps can migrate with minimal source changes.
 
@@ -11,12 +11,12 @@ Svelte apps can migrate with minimal source changes.
 `@ifloppy/maxcraftmc-ui-svelte` is the shared UI foundation for MaxCraft web
 projects:
 
-- Svelte component library compatible with `carbon-components-svelte@0.89.4`
+- Svelte component library compatible with `carbon-components-svelte@0.108.0`
 - MaxCraft Minecraft-styled theme layer for Carbon class names
 - CSS/token entrypoints that Hugo themes can reuse without Svelte
 - Public package intended for MPCenter, MaxCraft Wiki, and future sites
 
-The implementation is derived from Carbon Svelte 0.89.4 under Apache-2.0. The
+The implementation is derived from Carbon Svelte 0.108.0 under Apache-2.0. The
 theme tokens and visual overrides are MaxCraft-specific.
 
 ## AI Generated Notice
@@ -38,7 +38,7 @@ alias after the package is published:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.2.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }
@@ -104,5 +104,5 @@ published.
 ## Attribution
 
 The component source and type surface are derived from
-`carbon-components-svelte@0.89.4`, licensed under Apache-2.0. MaxCraft theme
+`carbon-components-svelte@0.108.0`, licensed under Apache-2.0. MaxCraft theme
 tokens and CSS customizations are maintained by MaxCraftMC.

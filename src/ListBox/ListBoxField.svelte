@@ -6,25 +6,34 @@
   /** Set to `true` to disable the list box field */
   export let disabled = false;
 
+  /** Set to `true` to use the read-only variant */
+  export let readonly = false;
+
   /** Specify the role attribute */
   export let role = "combobox";
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "-1";
 
   /** Default translation ids */
   export const translationIds = { close: "close", open: "open" };
 
   /**
-   * Override the default translation ids
+   * Override the default translation ids.
    * @type {(id: ListBoxFieldTranslationId) => string}
    */
   export let translateWithId = (id) => defaultTranslations[id];
 
   /** Set an id for the top-level element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the top-level HTML element */
+  /**
+   * Obtain a reference to the top-level HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { getContext } from "svelte";
@@ -33,7 +42,7 @@
     [translationIds.close]: "Close menu",
     [translationIds.open]: "Open menu",
   };
-  const ctx = getContext("MultiSelect");
+  const ctx = getContext("carbon:MultiSelect");
 
   $: if (ctx && ref) {
     ctx.declareRef({ key: "field", ref });
@@ -51,6 +60,7 @@
   aria-owns={(ariaExpanded && menuId) || undefined}
   aria-controls={(ariaExpanded && menuId) || undefined}
   aria-disabled={disabled}
+  aria-readonly={readonly || undefined}
   aria-label={ariaExpanded ? translateWithId("close") : translateWithId("open")}
   tabindex={disabled ? "-1" : tabindex}
   class:bx--list-box__field={true}

@@ -1,19 +1,36 @@
 <script context="module">
   /**
-   * Computes the depth of a tree leaf node relative to <ul role="tree" />
-   * @param {HTMLLIElement} node
-   * @returns {number} depth
+   * Computes the depth of a tree leaf node relative to <ul role="tree" />.
+   * Returns the depth of the node (0-based, where 0 is the root level).
+   * @type {(node: HTMLLIElement | null) => number}
+   * @example
+   * ```svelte
+   * import { computeTreeLeafDepth } from 'carbon-components-svelte/TreeView/TreeViewNode.svelte';
+   * let nodeElement;
+   * $: depth = computeTreeLeafDepth(nodeElement);
+   *
+   * <li bind:this={nodeElement}>Node at depth {depth}</li>
+   * ```
    */
   export function computeTreeLeafDepth(node) {
     let depth = 0;
 
     if (node == null) return depth;
 
+    // Count the node itself if it's an LI
+    if (node instanceof HTMLElement && node.tagName === "LI") {
+      depth++;
+    }
+
     let parentNode = node.parentNode;
 
-    while (parentNode != null && parentNode.getAttribute("role") !== "tree") {
-      parentNode = parentNode.parentNode;
+    while (
+      parentNode != null &&
+      parentNode instanceof HTMLElement &&
+      parentNode.getAttribute("role") !== "tree"
+    ) {
       if (parentNode.tagName === "LI") depth++;
+      parentNode = parentNode.parentNode;
     }
 
     return depth;
@@ -21,34 +38,53 @@
 
   /**
    * Finds the nearest parent tree node
-   * @param {HTMLElement} node
-   * @returns {null | HTMLElement}
+   * @type {(node: HTMLElement | null) => null | HTMLElement}
    */
-  function findParentTreeNode(node) {
+  export function findParentTreeNode(node) {
+    if (node == null || !(node instanceof HTMLElement)) return null;
     if (node.classList.contains("bx--tree-parent-node")) return node;
+    if (node.classList.contains("bx--tree-node-link-parent")) {
+      return node.firstElementChild;
+    }
     if (node.classList.contains("bx--tree")) return null;
-    return findParentTreeNode(node.parentNode);
+    if (node.parentNode instanceof HTMLElement) {
+      return findParentTreeNode(node.parentNode);
+    }
+    return null;
   }
 </script>
 
 <script>
   /**
-   * @typedef {string | number} TreeNodeId
-   * @slot {{ node: { id: TreeNodeId; text: string; expanded: false, leaf: boolean; disabled: boolean; selected: boolean; } }}
+   * @generics {Node extends TreeNode<any> = TreeNode<any>, Icon = any} Node,Icon
+   * @typedef {import('./TreeView.svelte').TreeNode<Id>} TreeNode<Id=(string|number)>
+   * @slot {{ node: Node & { expanded: false; leaf: boolean; selected: boolean; } }}
    */
 
   export let leaf = false;
 
-  /** @type {TreeNodeId} */
+  /** @type {Node["id"]} */
   export let id = "";
   export let text = "";
   export let disabled = false;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the URL the TreeNode links to.
+   * @type {string | undefined}
    */
-  export let icon = undefined;
+  export let href = undefined;
+
+  /**
+   * Specify the link target.
+   * @type {string | undefined}
+   */
+  export let target = undefined;
+
+  /**
+   * Specify the icon to render.
+   * @type {Icon}
+   */
+  export let icon = /** @type {Icon} */ (undefined);
 
   import { afterUpdate, getContext } from "svelte";
 
@@ -56,27 +92,36 @@
   let refLabel = null;
   let prevActiveId = undefined;
 
-  const { activeNodeId, selectedNodeIds, clickNode, selectNode, focusNode } =
-    getContext("TreeView");
-  const offset = () =>
-    computeTreeLeafDepth(refLabel) + (leaf && icon ? 2 : 2.5);
+  const {
+    activeNodeId,
+    selectedIdsSetStore,
+    clickNode,
+    selectNode,
+    focusNode,
+  } = getContext("carbon:TreeView");
+  function offset() {
+    return computeTreeLeafDepth(refLabel) - 1 + (leaf && icon ? 2 : 2.5);
+  }
 
   afterUpdate(() => {
-    if (id === $activeNodeId && prevActiveId !== $activeNodeId) {
-      if (!$selectedNodeIds.includes(id)) selectNode(node);
-    }
+    if (
+      id === $activeNodeId &&
+      prevActiveId !== $activeNodeId &&
+      !$selectedIdsSetStore.has(id)
+    )
+      selectNode(node);
 
     prevActiveId = $activeNodeId;
   });
 
-  $: selected = $selectedNodeIds.includes(id);
+  $: selected = $selectedIdsSetStore.has(id);
+  // Merge all props (including custom properties) with computed properties
+  // Explicitly include disabled to ensure it's always present (has default value)
   $: node = {
-    id,
-    text,
-    // A node cannot be expanded.
-    expanded: false,
+    ...$$props,
+    disabled, // Ensure disabled is always included (has default value)
+    expanded: false, // A node cannot be expanded.
     leaf,
-    disabled,
     selected,
   };
   $: if (refLabel) {
@@ -85,49 +130,106 @@
   }
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
-<li
-  bind:this={ref}
-  role="treeitem"
-  {id}
-  tabindex={disabled ? undefined : -1}
-  aria-current={id === $activeNodeId || undefined}
-  aria-selected={disabled ? undefined : selected}
-  aria-disabled={disabled}
-  class:bx--tree-node={true}
-  class:bx--tree-leaf-node={true}
-  class:bx--tree-node--active={id === $activeNodeId}
-  class:bx--tree-node--selected={selected}
-  class:bx--tree-node--disabled={disabled}
-  class:bx--tree-node--with-icon={icon}
-  on:click|stopPropagation={() => {
-    if (disabled) return;
-    clickNode(node);
-  }}
-  on:keydown={(e) => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Enter") {
-      e.stopPropagation();
-    }
+{#if href}
+  <li role="none">
+    <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role a11y-role-has-required-aria-props -->
+    <a
+      bind:this={ref}
+      role="treeitem"
+      {id}
+      href={disabled ? undefined : href}
+      target={disabled ? undefined : target}
+      rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      tabindex={disabled ? undefined : -1}
+      aria-current={id === $activeNodeId ? "page" : undefined}
+      aria-disabled={disabled}
+      class:bx--tree-node={true}
+      class:bx--tree-leaf-node={true}
+      class:bx--tree-node--active={id === $activeNodeId}
+      class:bx--tree-node--selected={selected}
+      class:bx--tree-node--disabled={disabled}
+      class:bx--tree-node--with-icon={icon}
+      on:click|stopPropagation={(event) => {
+        if (disabled) return;
+        clickNode(node, event);
+      }}
+      on:keydown={(event) => {
+        if (
+          event.key === "ArrowLeft" ||
+          event.key === "ArrowRight" ||
+          event.key === "Enter"
+        ) {
+          event.stopPropagation();
+        }
 
-    if (e.key === "ArrowLeft") {
-      const parentNode = findParentTreeNode(ref.parentNode);
-      if (parentNode) parentNode.focus();
-    }
+        if (event.key === "ArrowLeft") {
+          const parentNode = findParentTreeNode(ref.parentNode?.parentNode);
+          if (parentNode) parentNode.focus();
+        }
 
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          if (disabled) return;
+          clickNode(node, event);
+        }
+      }}
+      on:focus={() => {
+        focusNode(node);
+      }}
+    >
+      <div bind:this={refLabel} class:bx--tree-node__label={true}>
+        <svelte:component this={icon} class="bx--tree-node__icon" />
+        <slot {node}> {text} </slot>
+      </div>
+    </a>
+  </li>
+{:else}
+  <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
+  <li
+    bind:this={ref}
+    role="treeitem"
+    {id}
+    tabindex={disabled ? undefined : -1}
+    aria-current={id === $activeNodeId || undefined}
+    aria-selected={disabled ? undefined : selected}
+    aria-disabled={disabled}
+    class:bx--tree-node={true}
+    class:bx--tree-leaf-node={true}
+    class:bx--tree-node--active={id === $activeNodeId}
+    class:bx--tree-node--selected={selected}
+    class:bx--tree-node--disabled={disabled}
+    class:bx--tree-node--with-icon={icon}
+    on:click|stopPropagation={(event) => {
       if (disabled) return;
-      clickNode(node);
-    }
-  }}
-  on:focus={() => {
-    focusNode(node);
-  }}
->
-  <div bind:this={refLabel} class:bx--tree-node__label={true}>
-    <svelte:component this={icon} class="bx--tree-node__icon" />
-    <slot {node}>
-      {text}
-    </slot>
-  </div>
-</li>
+      clickNode(node, event);
+    }}
+    on:keydown={(event) => {
+      if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "Enter"
+      ) {
+        event.stopPropagation();
+      }
+
+      if (event.key === "ArrowLeft") {
+        const parentNode = findParentTreeNode(ref.parentNode);
+        if (parentNode) parentNode.focus();
+      }
+
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (disabled) return;
+        clickNode(node, event);
+      }
+    }}
+    on:focus={() => {
+      focusNode(node);
+    }}
+  >
+    <div bind:this={refLabel} class:bx--tree-node__label={true}>
+      <svelte:component this={icon} class="bx--tree-node__icon" />
+      <slot {node}> {text} </slot>
+    </div>
+  </li>
+{/if}

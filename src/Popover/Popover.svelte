@@ -1,9 +1,13 @@
 <script>
   /**
-   * @event {{ target: HTMLElement; }} click:outside
+   * @event click:outside
+   * @property {HTMLElement} target
    */
 
-  /** Set to `true` to display the popover */
+  /**
+   * Set to `true` to display the popover.
+   * @bindable writable
+   */
   export let open = false;
 
   /** Set to `true` to close the popover on an outside click */
@@ -13,7 +17,7 @@
   export let caret = false;
 
   /**
-   * Specify the alignment of the caret
+   * Specify the alignment of the caret.
    * @type {"top" | "top-left" | "top-right" | "bottom" | "bottom-left" | "bottom-right" | "left" | "left-bottom" | "left-top" | "right" | "right-bottom" | "right-top"}
    */
   export let align = "top";
@@ -28,6 +32,7 @@
   export let relative = false;
 
   import { createEventDispatcher } from "svelte";
+  import { isOutsideClick } from "../utils/isOutsideClick.js";
 
   const dispatch = createEventDispatcher();
 
@@ -35,10 +40,9 @@
 </script>
 
 <svelte:window
-  on:click={(e) => {
-    if (!open) return;
-    if (!ref.contains(e.target)) {
-      dispatch("click:outside", { target: e.target });
+  on:click={(event) => {
+    if (open && isOutsideClick(event, ref)) {
+      dispatch("click:outside", { target: event.target });
       if (closeOnOutsideClick) open = false;
     }
   }}
@@ -67,7 +71,5 @@
   style:position={relative ? "relative" : undefined}
   {...$$restProps}
 >
-  <div class:bx--popover-contents={true}>
-    <slot />
-  </div>
+  <div class:bx--popover-contents={true}><slot /></div>
 </div>

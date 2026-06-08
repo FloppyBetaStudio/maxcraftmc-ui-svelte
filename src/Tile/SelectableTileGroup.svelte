@@ -1,0 +1,111 @@
+<script>
+  /**
+   * @template {string} [T=string]
+   * @event {T} select
+   * @event {T} deselect
+   */
+
+  /**
+   * Specify the selected tile values.
+   * @type {T[]}
+   * @bindable writable
+   */
+  export let selected = [];
+
+  /** Set to `true` to disable the tile group */
+  export let disabled = false;
+
+  /**
+   * Specify a name attribute for the checkbox inputs.
+   * @type {string | undefined}
+   */
+  export let name = undefined;
+
+  /**
+   * Specify the legend text.
+   * Alternatively, use the named slot "legendChildren".
+   * @example
+   * ```svelte
+   * <SelectableTileGroup>
+   *   <span slot="legendChildren">Custom Legend</span>
+   * </SelectableTileGroup>
+   * ```
+   */
+  export let legendText = "";
+
+  /** Set to `true` to visually hide the legend */
+  export let hideLegend = false;
+
+  import { createEventDispatcher, setContext } from "svelte";
+  import { readonly, writable } from "svelte/store";
+
+  const dispatch = createEventDispatcher();
+  /**
+   * @type {import("svelte/store").Writable<T[]>}
+   */
+  const selectedValues = writable(selected);
+  /**
+   * @type {import("svelte/store").Writable<string | undefined>}
+   */
+  const groupName = writable(name);
+  /**
+   * @type {import("svelte/store").Readable<string | undefined>}
+   */
+  const groupNameReadonly = readonly(groupName);
+
+  /**
+   * @type {(data: { selected: boolean; value: T }) => void}
+   */
+  const add = ({ selected: isSelected, value }) => {
+    if (isSelected && !$selectedValues.includes(value)) {
+      selectedValues.update((values) => [...values, value]);
+    }
+  };
+
+  /**
+   * @type {(value: T) => void}
+   */
+  const remove = (value) => {
+    if ($selectedValues.includes(value)) {
+      selectedValues.update((values) => values.filter((v) => v !== value));
+    }
+  };
+
+  /**
+   * @type {(data: { value: T; selected: boolean }) => void}
+   */
+  const update = ({ value, selected: isSelected }) => {
+    if (isSelected) {
+      if (!$selectedValues.includes(value)) {
+        selectedValues.update((values) => [...values, value]);
+        dispatch("select", value);
+      }
+    } else {
+      if ($selectedValues.includes(value)) {
+        selectedValues.update((values) => values.filter((v) => v !== value));
+        dispatch("deselect", value);
+      }
+    }
+  };
+
+  setContext("carbon:SelectableTileGroup", {
+    selectedValues,
+    groupName: groupNameReadonly,
+    add,
+    remove,
+    update,
+  });
+
+  $: selected = $selectedValues;
+  $: selectedValues.set(selected);
+  $: groupName.set(name);
+</script>
+
+<fieldset {disabled} class:bx--tile-group={true} {...$$restProps}>
+  {#if legendText || $$slots.legendChildren}
+    <legend class:bx--label={true} class:bx--visually-hidden={hideLegend}>
+      <slot name="legendChildren">{legendText}</slot>
+    </legend>
+  {/if}
+  <div><slot /></div>
+</fieldset>

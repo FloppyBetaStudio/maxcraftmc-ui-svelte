@@ -1,7 +1,7 @@
 # Component Catalog
 
 This catalog mirrors the public exports in `src/index.js`. The compatibility
-target is `carbon-components-svelte@0.89.4`.
+target is `carbon-components-svelte@0.108.0`.
 
 ## Inputs And Forms
 
@@ -89,7 +89,7 @@ target is `carbon-components-svelte@0.89.4`.
 
 ## Styling Status
 
-All components keep the Carbon Svelte 0.89.4 API surface. MaxCraft visual
+All components keep the Carbon Svelte 0.108.0 API surface. MaxCraft visual
 styling is currently applied through `css/maxcraft.css` as a shared override
 layer. Components not explicitly targeted by the override layer still inherit
 Carbon-compatible layout and MaxCraft token colors where they use Carbon custom

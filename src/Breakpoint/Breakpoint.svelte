@@ -2,19 +2,24 @@
   /**
    * @typedef {"sm" | "md" | "lg" | "xlg" | "max"} BreakpointSize
    * @typedef {320 | 672 | 1056 | 1312 | 1584} BreakpointValue
-   * @event {{ size: BreakpointSize; breakpointValue: BreakpointValue; }} change
+   * @event change
+   * @type {object}
+   * @property {BreakpointSize} size
+   * @property {BreakpointValue} breakpointValue
    * @slot {{ size: BreakpointSize; sizes: Record<BreakpointSize, boolean>; }}
    */
 
   /**
-   * Determine the current Carbon grid breakpoint size
+   * Determine the current Carbon grid breakpoint size.
    * @type {BreakpointSize}
+   * @bindable readonly
    */
   export let size = undefined;
 
   /**
-   * Carbon grid sizes as an object
+   * Carbon grid sizes as an object.
    * @type {Record<BreakpointSize, boolean>}
+   * @bindable readonly
    */
   export let sizes = {
     sm: false,
@@ -33,13 +38,13 @@
 
   $: size = $observer;
   $: sizes = {
-    sm: size == "sm",
-    md: size == "md",
-    lg: size == "lg",
-    xlg: size == "xlg",
-    max: size == "max",
+    sm: size === "sm",
+    md: size === "md",
+    lg: size === "lg",
+    xlg: size === "xlg",
+    max: size === "max",
   };
-  $: if (size != undefined)
+  $: if (size !== undefined)
     // svelte-ignore reactive_declaration_non_reactive_property
     dispatch("change", { size, breakpointValue: breakpoints[size] });
 </script>

@@ -5,7 +5,7 @@
    */
 
   /**
-   * Set the size of the input
+   * Set the size of the input.
    * @type {"sm" | "xl"}
    */
   export let size = undefined;
@@ -13,9 +13,9 @@
   /**
    * Specify the input value.
    *
-   * `value` will be set to `null` if type="number"
-   * and the value is empty.
+   * `value` will be set to `null` if type="number" and the value is empty.
    * @type {null | number | string}
+   * @bindable writable
    */
   export let value = "";
 
@@ -32,10 +32,10 @@
   export let helperText = "";
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Specify a name attribute for the input
+   * Specify a name attribute for the input.
    * @type {string}
    */
   export let name = undefined;
@@ -52,13 +52,16 @@
   /** Specify the invalid state text */
   export let invalidText = "";
 
-  /** Set to `true` to indicate an warning state */
+  /** Set to `true` to indicate a warning state */
   export let warn = false;
 
   /** Specify the warning state text */
   export let warnText = "";
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   /** Set to `true` to mark the field as required */
@@ -71,31 +74,31 @@
   export let readonly = false;
 
   import { createEventDispatcher, getContext } from "svelte";
-  import WarningFilled from "../icons/WarningFilled.svelte";
-  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
   import EditOff from "../icons/EditOff.svelte";
+  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
+  import WarningFilled from "../icons/WarningFilled.svelte";
 
-  const ctx = getContext("Form");
+  const ctx = getContext("carbon:Form");
   const dispatch = createEventDispatcher();
 
   function parse(raw) {
     if ($$restProps.type !== "number") return raw;
-    return raw != "" ? Number(raw) : null;
+    return raw === "" ? null : Number(raw);
   }
 
   /** @type {(e: Event) => void} */
-  const onInput = (e) => {
-    value = parse(e.target.value);
+  const onInput = (event) => {
+    value = parse(event.target.value);
     dispatch("input", value);
   };
 
   /** @type {(e: Event) => void} */
-  const onChange = (e) => {
-    dispatch("change", parse(e.target.value));
+  const onChange = (event) => {
+    dispatch("change", parse(event.target.value));
   };
 
   const isFluid = !!ctx && ctx.isFluid;
-  $: error = invalid && !readonly;
+  $: hasError = invalid && !readonly;
   $: helperId = `helper-${id}`;
   $: errorId = `error-${id}`;
   $: warnId = `warn-${id}`;
@@ -117,7 +120,7 @@
 >
   {#if inline}
     <div class:bx--text-input__label-helper-wrapper={true}>
-      {#if labelText}
+      {#if labelText || $$slots.labelChildren}
         <label
           for={id}
           class:bx--label={true}
@@ -127,9 +130,7 @@
           class:bx--label--inline--sm={size === "sm"}
           class:bx--label--inline--xl={size === "xl"}
         >
-          <slot name="labelText">
-            {labelText}
-          </slot>
+          <slot name="labelChildren"> {labelText} </slot>
         </label>
       {/if}
       {#if !isFluid && helperText}
@@ -143,7 +144,7 @@
       {/if}
     </div>
   {/if}
-  {#if !inline && (labelText || $$slots.labelText)}
+  {#if !inline && (labelText || $$slots.labelChildren)}
     <label
       for={id}
       class:bx--label={true}
@@ -153,9 +154,7 @@
       class:bx--label--inline-sm={inline && size === "sm"}
       class:bx--label--inline-xl={inline && size === "xl"}
     >
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
   {/if}
   <div
@@ -163,7 +162,7 @@
     class:bx--text-input__field-outer-wrapper--inline={inline}
   >
     <div
-      data-invalid={error || undefined}
+      data-invalid={hasError || undefined}
       data-warn={warn || undefined}
       class:bx--text-input__field-wrapper={true}
       class:bx--text-input__field-wrapper--warning={!invalid && warn}
@@ -183,10 +182,10 @@
       {/if}
       <input
         bind:this={ref}
-        data-invalid={error || undefined}
-        aria-invalid={error || undefined}
+        data-invalid={hasError || undefined}
+        aria-invalid={hasError || undefined}
         data-warn={warn || undefined}
-        aria-describedby={error
+        aria-describedby={hasError
           ? errorId
           : warn
             ? warnId
@@ -202,7 +201,7 @@
         {readonly}
         class:bx--text-input={true}
         class:bx--text-input--light={light}
-        class:bx--text-input--invalid={error}
+        class:bx--text-input--invalid={hasError}
         class:bx--text-input--warning={warn}
         class:bx--text-input--sm={size === "sm"}
         class:bx--text-input--xl={size === "xl"}
@@ -214,14 +213,12 @@
         on:focus
         on:blur
         on:paste
-      />
+      >
       {#if isFluid}
-        <hr class:bx--text-input__divider={true} />
+        <hr class:bx--text-input__divider={true}>
       {/if}
       {#if isFluid && !inline && invalid}
-        <div class:bx--form-requirement={true} id={errorId}>
-          {invalidText}
-        </div>
+        <div class:bx--form-requirement={true} id={errorId}>{invalidText}</div>
       {/if}
       {#if isFluid && !inline && warn}
         <div class:bx--form-requirement={true} id={warnId}>{warnText}</div>
@@ -238,9 +235,7 @@
       </div>
     {/if}
     {#if !isFluid && invalid}
-      <div class:bx--form-requirement={true} id={errorId}>
-        {invalidText}
-      </div>
+      <div class:bx--form-requirement={true} id={errorId}>{invalidText}</div>
     {/if}
     {#if !isFluid && !invalid && warn}
       <div class:bx--form-requirement={true} id={warnId}>{warnText}</div>

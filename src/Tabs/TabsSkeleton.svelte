@@ -3,7 +3,7 @@
   export let count = 4;
 
   /**
-   * Specify the type of tabs
+   * Specify the type of tabs.
    * @type {"default" | "container"}
    */
   export let type = "default";
@@ -25,9 +25,7 @@
   <ul class:bx--tabs--scrollable__nav={true}>
     {#each Array.from({ length: count }, (_, i) => i) as item}
       <li class:bx--tabs--scrollable__nav-item={true}>
-        <div class:bx--tabs__nav-link={true}>
-          <span></span>
-        </div>
+        <div class:bx--tabs__nav-link={true}><span></span></div>
       </li>
     {/each}
   </ul>

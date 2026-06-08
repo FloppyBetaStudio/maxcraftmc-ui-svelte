@@ -1,0 +1,84 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+export type CarbonModalContext = Record<string, never>;
+
+export type CarbonComposedModalContext = {
+  closeModal: () => void;
+  submit: () => void;
+  declareRef: (ref: HTMLButtonElement) => void;
+  updateLabel: (value: string | undefined) => void;
+};
+
+type $RestProps = SvelteHTMLElements["div"];
+
+type $Props = {
+  /**
+   * Set the size of the composed modal.
+   * @default undefined
+   */
+  size?: "xs" | "sm" | "lg";
+
+  /**
+   * Set to `true` to open the modal.
+   * @default false
+   */
+  open?: boolean;
+
+  /**
+   * Set to `true` to use the danger variant
+   * @default false
+   */
+  danger?: boolean;
+
+  /**
+   * Set to `true` to prevent the modal from closing when clicking outside
+   * @default false
+   */
+  preventCloseOnClickOutside?: boolean;
+
+  /**
+   * Specify a class for the inner modal
+   * @default ""
+   */
+  containerClass?: string;
+
+  /**
+   * Specify a selector to be focused when opening the modal.
+   * @default "[data-modal-primary-focus]"
+   */
+  selectorPrimaryFocus?: null | string;
+
+  /**
+   * Obtain a reference to the top-level HTML element.
+   * @default null
+   */
+  ref?: null | HTMLDivElement;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type ComposedModalProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class ComposedModal extends SvelteComponentTyped<
+  ComposedModalProps,
+  {
+    click: WindowEventMap["click"];
+    "click:button--primary": CustomEvent<null>;
+    close: CustomEvent<{
+      trigger: "escape-key" | "outside-click" | "close-button";
+    }>;
+    keydown: WindowEventMap["keydown"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+    open: CustomEvent<null>;
+    submit: CustomEvent<null>;
+    transitionend: CustomEvent<{
+      open: boolean;
+    }>;
+  },
+  { default: Record<string, never> }
+> {}

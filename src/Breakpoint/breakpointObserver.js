@@ -2,15 +2,18 @@ import { onMount } from "svelte";
 import { derived, writable } from "svelte/store";
 import { breakpoints } from "./breakpoints";
 
+/** @typedef {import("./breakpoints").BreakpointSize} BreakpointSize */
+
 /**
  * Creates a readable store that returns the current breakpoint size.
  * It also provides functions for creating derived stores used to do comparisons.
  */
 export function breakpointObserver() {
+  /** @type {import("svelte/store").Writable<BreakpointSize | undefined>} */
   const store = writable(undefined);
 
   onMount(() => {
-    /** @type {Record<import("./breakpoints").BreakpointSize, MediaQueryList>} */
+    /** @type {Record<BreakpointSize, MediaQueryList>} */
     const match = {
       sm: window.matchMedia(`(max-width: ${breakpoints.md}px)`),
       md: window.matchMedia(
@@ -25,27 +28,33 @@ export function breakpointObserver() {
       max: window.matchMedia(`(min-width: ${breakpoints.max}px)`),
     };
     const matchers = Object.entries(match);
-    const sizeByMedia = Object.fromEntries(
-      matchers.map(([size, queryList]) => [queryList.media, size]),
+    const sizeByMedia = /** @type {Record<string, BreakpointSize>} */ (
+      Object.fromEntries(
+        matchers.map(([size, queryList]) => [queryList.media, size]),
+      )
     );
 
-    const size = matchers.find(([size, queryList]) => queryList.matches)[0];
-    store.set(size);
+    const entry = matchers.find(([_size, queryList]) => queryList.matches);
+    const size = entry?.[0];
+    if (size !== undefined) store.set(/** @type {BreakpointSize} */ (size));
 
     /** @type {(e: MediaQueryListEvent) => void} */
     function handleChange({ matches, media }) {
-      const size = sizeByMedia[media];
-      if (matches) store.set(size);
+      const raw = sizeByMedia[media];
+      if (matches && raw !== undefined) {
+        const size = /** @type {BreakpointSize} */ (raw);
+        store.set(size);
+      }
     }
 
-    matchers.forEach(([size, queryList]) =>
-      queryList.addEventListener("change", handleChange),
-    );
+    for (const [_size, queryList] of matchers) {
+      queryList.addEventListener("change", handleChange, { passive: true });
+    }
 
     return () => {
-      matchers.forEach(([size, queryList]) =>
-        queryList.removeEventListener("change", handleChange),
-      );
+      for (const [_size, queryList] of matchers) {
+        queryList.removeEventListener("change", handleChange);
+      }
     };
   });
 
@@ -55,27 +64,34 @@ export function breakpointObserver() {
     /**
      * Returns a store readable store that returns whether the current
      * breakpoint is smaller than {@link size}.
-     * @param {import("./breakpoints").BreakpointSize} size Size to compare against.
+     * @param {BreakpointSize} size Size to compare against.
      */
     smallerThan: (size) => {
       checkSizeValid(size);
-      return derived(store, ($size) => breakpoints[$size] < breakpoints[size]);
+      return derived(store, ($size) =>
+        $size === undefined ? false : breakpoints[$size] < breakpoints[size],
+      );
     },
 
     /**
      * Returns a store readable store that returns whether the current
      * breakpoint is larger than {@link size}.
-     * @param {import("./breakpoints").BreakpointSize} size Size to compare against.
+     * @param {BreakpointSize} size Size to compare against.
      */
     largerThan: (size) => {
       checkSizeValid(size);
-      return derived(store, ($size) => breakpoints[$size] > breakpoints[size]);
+      return derived(store, ($size) =>
+        $size === undefined ? false : breakpoints[$size] > breakpoints[size],
+      );
     },
   };
 }
 
+/**
+ * @param {BreakpointSize} size
+ */
 function checkSizeValid(size) {
-  if (size in breakpoints == false)
+  if (size in breakpoints === false)
     throw new Error(`"${size}" is not a valid breakpoint size.`);
 }
 

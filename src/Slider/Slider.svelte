@@ -4,7 +4,10 @@
    * @event {number} input
    */
 
-  /** Specify the value of the slider */
+  /**
+   * Specify the value of the slider.
+   * @bindable writable
+   */
   export let value = 0;
 
   /** Set the maximum slider value */
@@ -34,6 +37,9 @@
   /** Set to `true` to disable the slider */
   export let disabled = false;
 
+  /** Set to `true` to use the read-only variant */
+  export let readonly = false;
+
   /** Set to `true` to enable the light variant */
   export let light = false;
 
@@ -47,14 +53,29 @@
   export let fullWidth = false;
 
   /** Set an id for the slider div element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /** Set to `true` to indicate an invalid state */
   export let invalid = false;
 
+  /** Specify the invalid state text */
+  export let invalidText = "";
+
+  /** Set to `true` to indicate a warning state */
+  export let warn = false;
+
+  /** Specify the warning state text */
+  export let warnText = "";
+
   /**
    * Specify the label text.
-   * Alternatively, use the "labelText" slot (e.g., `<span slot="labelText">...</span>`)
+   * Alternatively, use the "labelChildren" slot.
+   * @example
+   * ```svelte
+   * <Slider>
+   *   <span slot="labelChildren">Custom Label</span>
+   * </Slider>
+   * ```
    */
   export let labelText = "";
 
@@ -64,40 +85,47 @@
   /** Set a name for the slider element */
   export let name = "";
 
-  /** Obtain a reference to the HTML element */
+  /**
+   * Obtain a reference to the HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { createEventDispatcher } from "svelte";
+  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
+  import WarningFilled from "../icons/WarningFilled.svelte";
 
   const dispatch = createEventDispatcher();
 
   let trackRef = null;
   let dragging = false;
   let holding = false;
+  let currentEvent = null;
 
-  function startDragging() {
-    dragging = true;
-  }
-
-  function startHolding() {
+  function startInteraction(event) {
+    if (disabled || readonly) return;
+    currentEvent = event;
     holding = true;
+    dragging = true;
   }
 
   function stopHolding() {
     holding = false;
     dragging = false;
+    currentEvent = null;
   }
 
-  function move() {
+  function move(event) {
     if (holding) {
-      startDragging();
+      currentEvent = event;
+      dragging = true;
     }
   }
 
-  function calcValue(e) {
-    if (disabled) return;
+  function calcValue(event) {
+    if (disabled || readonly || !event) return;
 
-    const offsetX = e.touches ? e.touches[0].clientX : e.clientX;
+    const offsetX = event.touches ? event.touches[0].clientX : event.clientX;
     const { left, width } = trackRef.getBoundingClientRect();
     let nextValue =
       min +
@@ -114,6 +142,12 @@
   }
 
   $: labelId = `label-${id}`;
+  $: errorId = `error-${id}`;
+  $: warnId = `warn-${id}`;
+  $: inputId = `input-${id}`;
+  // Invalid/warn states are suppressed when the slider is disabled or read-only.
+  $: showInvalid = invalid && !disabled && !readonly;
+  $: showWarn = warn && !invalid && !disabled && !readonly;
   $: range = max - min;
   $: left = ((value - min) / range) * 100;
   $: {
@@ -123,20 +157,20 @@
       value = max;
     }
 
-    if (dragging) {
-      calcValue(event);
+    if (dragging && currentEvent) {
+      calcValue(currentEvent);
       dragging = false;
     }
 
-    if (!holding && !disabled) {
+    if (!holding && !disabled && !readonly) {
       dispatch("change", value);
     }
   }
 </script>
 
 <svelte:window
-  on:mousemove={move}
-  on:touchmove={move}
+  on:mousemove|passive={move}
+  on:touchmove|passive={move}
   on:mouseup={stopHolding}
   on:touchend={stopHolding}
   on:touchcancel={stopHolding}
@@ -153,51 +187,62 @@
   on:mouseleave
 >
   <label
-    for={id}
+    for={inputId}
     id={labelId}
     class:bx--label={true}
     class:bx--label--disabled={disabled}
     class:bx--visually-hidden={hideLabel}
   >
-    <slot name="labelText">
-      {labelText}
-    </slot>
+    <slot name="labelChildren"> {labelText} </slot>
   </label>
-  <div class:bx--slider-container={true} style:width={fullWidth && "100%"}>
-    <span class:bx--slider__range-label={true}>{minLabel || min}</span>
+  <div
+    class:bx--slider-container={true}
+    class:bx--slider-container--readonly={readonly}
+    style:width={fullWidth && "100%"}
+  >
+    <span class:bx--slider__range-label={true}>{minLabel ?? min}</span>
     <div
       bind:this={ref}
-      role="presentation"
-      tabindex="-1"
       class:bx--slider={true}
       class:bx--slider--disabled={disabled}
+      class:bx--slider--readonly={readonly}
       style:max-width={fullWidth ? "none" : undefined}
-      on:mousedown={startDragging}
-      on:mousedown={startHolding}
-      on:touchstart={startHolding}
-      on:keydown={({ shiftKey, key }) => {
-        const keys = {
-          ArrowDown: -1,
-          ArrowLeft: -1,
-          ArrowRight: 1,
-          ArrowUp: 1,
-        };
-        if (keys[key]) {
-          value +=
-            step * (shiftKey ? range / step / stepMultiplier : 1) * keys[key];
-        }
-      }}
+      on:mousedown={startInteraction}
+      on:touchstart={startInteraction}
     >
       <div
         role="slider"
-        tabindex="0"
+        tabindex={readonly || disabled ? undefined : 0}
         class:bx--slider__thumb={true}
         style:left="{left}%"
         aria-valuemax={max}
         aria-valuemin={min}
         aria-valuenow={value}
         aria-labelledby={labelId}
+        aria-describedby={showInvalid
+          ? errorId
+          : showWarn
+            ? warnId
+            : undefined}
+        aria-invalid={showInvalid || undefined}
         {id}
+        on:keydown={(event) => {
+          if (disabled || readonly) return;
+          const keys = {
+            ArrowDown: -1,
+            ArrowLeft: -1,
+            ArrowRight: 1,
+            ArrowUp: 1,
+          };
+          if (keys[event.key]) {
+            const delta =
+              step *
+              (event.shiftKey ? range / step / stepMultiplier : 1) *
+              keys[event.key];
+            value = Math.round((value + delta) / step) * step;
+            dispatch("input", value);
+          }
+        }}
       ></div>
       <div bind:this={trackRef} class:bx--slider__track={true}></div>
       <div
@@ -205,28 +250,66 @@
         style:transform="translate(0, -50%) scaleX({left / 100})"
       ></div>
     </div>
-    <span class:bx--slider__range-label={true}>{maxLabel || max}</span>
-    <input
-      type={hideTextInput ? "hidden" : inputType}
-      id="input-{id}"
-      {name}
-      class:bx--text-input={true}
-      class:bx--slider-text-input={true}
-      class:bx--text-input--light={light}
-      class:bx--text-input--invalid={invalid}
-      {value}
-      aria-labelledby={$$props["aria-label"] ? undefined : labelId}
-      aria-label={$$props["aria-label"] || "Slider number input"}
-      {disabled}
-      {required}
-      {min}
-      {max}
-      {step}
-      on:change={({ target }) => {
-        value = Number(target.value);
-      }}
-      data-invalid={invalid || null}
-      aria-invalid={invalid || null}
-    />
+    <span class:bx--slider__range-label={true}>{maxLabel ?? max}</span>
+    <div class:bx--slider-text-input-wrapper={true}>
+      {#if showInvalid}
+        <WarningFilled class="bx--slider__invalid-icon" />
+      {:else if showWarn}
+        <WarningAltFilled
+          class="bx--slider__invalid-icon bx--slider__invalid-icon--warning"
+        />
+      {/if}
+      <input
+        type={hideTextInput ? "hidden" : inputType}
+        id={inputId}
+        {name}
+        class:bx--text-input={true}
+        class:bx--slider-text-input={true}
+        class:bx--text-input--light={light}
+        class:bx--text-input--invalid={showInvalid}
+        class:bx--slider-text-input--warn={showWarn}
+        {value}
+        aria-labelledby={$$props["aria-label"] ? undefined : labelId}
+        aria-label={$$props["aria-label"] ?? "Slider number input"}
+        {disabled}
+        {readonly}
+        {required}
+        {min}
+        {max}
+        {step}
+        on:change={(event) => {
+          if (!readonly) {
+            value = Number(event.target.value);
+          }
+        }}
+        data-invalid={showInvalid || null}
+        data-warn={showWarn || null}
+        aria-invalid={showInvalid || null}
+        aria-describedby={showInvalid
+          ? errorId
+          : showWarn
+            ? warnId
+            : undefined}
+      >
+    </div>
   </div>
+  {#if showInvalid}
+    <div
+      id={errorId}
+      class:bx--slider__validation-msg={true}
+      class:bx--slider__validation-msg--invalid={true}
+      class:bx--form-requirement={true}
+    >
+      {invalidText}
+    </div>
+  {/if}
+  {#if showWarn}
+    <div
+      id={warnId}
+      class:bx--slider__validation-msg={true}
+      class:bx--form-requirement={true}
+    >
+      {warnText}
+    </div>
+  {/if}
 </div>

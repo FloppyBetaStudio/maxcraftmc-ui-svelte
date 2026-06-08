@@ -1,0 +1,30 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["a"];
+
+type $Props = {
+  /**
+   * Specify the `href` attribute
+   * @default "#main-content"
+   */
+  href?: string;
+
+  /**
+   * Specify the tabindex
+   * @default "0"
+   */
+  tabindex?: number | string | undefined;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type SkipToContentProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class SkipToContent extends SvelteComponentTyped<
+  SkipToContentProps,
+  { click: WindowEventMap["click"] },
+  { default: Record<string, never> }
+> {}

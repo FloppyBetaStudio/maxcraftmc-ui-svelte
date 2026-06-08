@@ -2,13 +2,13 @@
   /** @extends {"./AccordionSkeleton.svelte"} AccordionSkeletonProps */
 
   /**
-   * Specify alignment of accordion item chevron icon
+   * Specify alignment of accordion item chevron icon.
    * @type {"start" | "end"}
    */
   export let align = "end";
 
   /**
-   * Specify the size of the accordion
+   * Specify the size of the accordion.
    * @type {"sm" | "xl"}
    */
   export let size = undefined;
@@ -23,11 +23,14 @@
   import { writable } from "svelte/store";
   import AccordionSkeleton from "./AccordionSkeleton.svelte";
 
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
   const disableItems = writable(disabled);
 
   $: disableItems.set(disabled);
 
-  setContext("Accordion", { disableItems });
+  setContext("carbon:Accordion", { disableItems });
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->

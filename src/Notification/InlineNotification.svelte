@@ -1,10 +1,11 @@
 <script>
   /**
-   * @event {{ timeout: boolean }} close
+   * @event close
+   * @property {boolean} timeout
    */
 
   /**
-   * Specify the kind of notification
+   * Specify the kind of notification.
    * @type {"error" | "info" | "info-square" | "success" | "warning" | "warning-alt"}
    */
   export let kind = "error";
@@ -15,7 +16,10 @@
   /** Set the timeout duration (ms) to hide the notification after opening it */
   export let timeout = 0;
 
-  /** Set the `role` attribute */
+  /**
+   * Specify the ARIA `role` for the notification container.
+   * @type {"alert" | "log" | "status"}
+   */
   export let role = "alert";
 
   /** Specify the title text */
@@ -27,25 +31,27 @@
   /** Set to `true` to hide the close button */
   export let hideCloseButton = false;
 
-  /**
-   * Specify the ARIA label for the status icon
-   * @type {string}
-   * */
-  export let statusIconDescription = kind + " icon";
-
   /** Specify the ARIA label for the close button */
   export let closeButtonDescription = "Close notification";
 
+  /**
+   * Set to `true` to show the notification, `false` to hide it.
+   * @bindable writable
+   */
+  export let open = true;
+
   import { createEventDispatcher, onMount } from "svelte";
-  import NotificationIcon from "./NotificationIcon.svelte";
+  import { createTimeoutDismiss } from "../utils/timeoutDismiss.js";
   import NotificationButton from "./NotificationButton.svelte";
+  import NotificationIcon from "./NotificationIcon.svelte";
 
   const dispatch = createEventDispatcher();
 
-  let open = true;
-  let timeoutId = undefined;
+  const dismiss = createTimeoutDismiss();
 
   function close(closeFromTimeout) {
+    dismiss.clear();
+
     const shouldContinue = dispatch(
       "close",
       { timeout: closeFromTimeout === true },
@@ -56,15 +62,9 @@
     }
   }
 
-  onMount(() => {
-    if (timeout) {
-      timeoutId = setTimeout(() => close(true), timeout);
-    }
+  $: dismiss.sync(open, timeout, () => close(true));
 
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  });
+  onMount(() => () => dismiss.clear());
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -87,18 +87,18 @@
     on:mouseleave
   >
     <div class:bx--inline-notification__details={true}>
-      <NotificationIcon
-        notificationType="inline"
-        {kind}
-        iconDescription={statusIconDescription}
-      />
+      <NotificationIcon notificationType="inline" {kind} />
       <div class:bx--inline-notification__text-wrapper={true}>
-        <p class:bx--inline-notification__title={true}>
-          <slot name="title">{title}</slot>
-        </p>
-        <div class:bx--inline-notification__subtitle={true}>
-          <slot name="subtitle">{subtitle}</slot>
-        </div>
+        {#if title || $$slots.titleChildren}
+          <p class:bx--inline-notification__title={true}>
+            <strong><slot name="titleChildren">{title}</slot></strong>
+          </p>
+        {/if}
+        {#if subtitle || $$slots.subtitleChildren}
+          <div class:bx--inline-notification__subtitle={true}>
+            <slot name="subtitleChildren">{subtitle}</slot>
+          </div>
+        {/if}
         <slot />
       </div>
     </div>

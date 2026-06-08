@@ -31,12 +31,12 @@ async function readExports(path) {
 }
 
 const localSrc = await readExports(new URL("../src/index.js", import.meta.url));
-const localTypes = await readExports(new URL("../types/index.d.ts", import.meta.url));
+const localTypes = await readExports(new URL("../src/index.d.ts", import.meta.url));
 const baselineSrc = await readExports(
   new URL("../node_modules/carbon-components-svelte/src/index.js", import.meta.url),
 );
 const baselineTypes = await readExports(
-  new URL("../node_modules/carbon-components-svelte/types/index.d.ts", import.meta.url),
+  new URL("../node_modules/carbon-components-svelte/src/index.d.ts", import.meta.url),
 );
 
 function diff(expected, actual) {

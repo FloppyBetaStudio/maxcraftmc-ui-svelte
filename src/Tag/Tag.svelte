@@ -1,13 +1,16 @@
 <script>
-  /** @restProps {div | span} */
+  /**
+   * @template [Icon=any]
+   * @restProps {div | span}
+   */
 
   /**
-   * Specify the type of tag
+   * Specify the type of tag.
    * @type {"red" | "magenta" | "purple" | "blue" | "cyan" | "teal" | "green" | "gray" | "cool-gray" | "warm-gray" | "high-contrast" | "outline"}
    */
   export let type = undefined;
 
-  /** @type {"sm" | "default"} */
+  /** @type {"sm" | "default" | "lg"} */
   export let size = "default";
 
   /** Set to `true` to use filterable variant */
@@ -26,13 +29,13 @@
   export let title = "Clear filter";
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
   /** Set an id for the filterable tag */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   import { createEventDispatcher } from "svelte";
   import Close from "../icons/Close.svelte";
@@ -52,6 +55,7 @@
     on:mouseleave
   />
 {:else if filter}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     aria-label={title}
     {id}
@@ -59,6 +63,7 @@
     class:bx--tag--disabled={disabled}
     class:bx--tag--filter={filter}
     class:bx--tag--sm={size === "sm"}
+    class:bx--tag--lg={size === "lg"}
     class:bx--tag--red={type === "red"}
     class:bx--tag--magenta={type === "magenta"}
     class:bx--tag--purple={type === "purple"}
@@ -72,6 +77,10 @@
     class:bx--tag--high-contrast={type === "high-contrast"}
     class:bx--tag--outline={type === "outline"}
     {...$$restProps}
+    on:click
+    on:mouseover
+    on:mouseenter
+    on:mouseleave
   >
     <slot props={{ class: "bx--tag__label" }}>
       <span class:bx--tag__label={true}>{type}</span>
@@ -82,13 +91,9 @@
       class:bx--tag__close-icon={true}
       {disabled}
       {title}
-      on:click
       on:click|stopPropagation={() => {
         dispatch("close");
       }}
-      on:mouseover
-      on:mouseenter
-      on:mouseleave
     >
       <Close />
     </button>
@@ -104,6 +109,7 @@
     class:bx--tag--interactive={true}
     class:bx--tag--disabled={disabled}
     class:bx--tag--sm={size === "sm"}
+    class:bx--tag--lg={size === "lg"}
     class:bx--tag--red={type === "red"}
     class:bx--tag--magenta={type === "magenta"}
     class:bx--tag--purple={type === "purple"}
@@ -124,14 +130,10 @@
   >
     {#if $$slots.icon || icon}
       <div class:bx--tag__custom-icon={true}>
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
       </div>
     {/if}
-    <span>
-      <slot />
-    </span>
+    <span> <slot /> </span>
   </button>
 {:else}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -140,6 +142,7 @@
     class:bx--tag={true}
     class:bx--tag--disabled={disabled}
     class:bx--tag--sm={size === "sm"}
+    class:bx--tag--lg={size === "lg"}
     class:bx--tag--red={type === "red"}
     class:bx--tag--magenta={type === "magenta"}
     class:bx--tag--purple={type === "purple"}
@@ -160,13 +163,9 @@
   >
     {#if $$slots.icon || icon}
       <div class:bx--tag__custom-icon={true}>
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
       </div>
     {/if}
-    <span>
-      <slot />
-    </span>
+    <span> <slot /> </span>
   </div>
 {/if}

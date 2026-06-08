@@ -1,6 +1,6 @@
 <script>
   /**
-   * Set the type of code snippet
+   * Set the type of code snippet.
    * @type {"single" | "multi"}
    */
   export let type = "single";
@@ -22,6 +22,8 @@
   <div class:bx--snippet-container={true}>
     {#if type === "single"}
       <span></span>
-    {:else if type === "multi"}<span></span> <span></span> <span></span>{/if}
+    {:else if type === "multi"}
+      <span></span> <span></span> <span></span>
+    {/if}
   </div>
 </div>

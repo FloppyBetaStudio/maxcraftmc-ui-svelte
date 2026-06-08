@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 
-const roots = ["src", "types", "css", "tokens"];
+const roots = ["src", "css", "tokens"];
 const extensions = new Set([".js", ".svelte", ".ts", ".d.ts", ".css", ".scss"]);
 const forbidden = [
   /\bnot implemented\b/i,
@@ -17,9 +17,15 @@ function hasAllowedExtension(path) {
 }
 
 async function walk(path) {
-  const entries = await readdir(new URL(`../${path}`, import.meta.url), {
-    withFileTypes: true,
-  });
+  let entries = [];
+  try {
+    entries = await readdir(new URL(`../${path}`, import.meta.url), {
+      withFileTypes: true,
+    });
+  } catch (error) {
+    if (error?.code === "ENOENT") return [];
+    throw error;
+  }
   const files = [];
 
   for (const entry of entries) {

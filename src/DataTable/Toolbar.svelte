@@ -1,29 +1,48 @@
 <script>
   /**
-   * Specify the toolbar size
+   * Specify the toolbar size.
    * @type {"sm" | "default"}
    */
   export let size = "default";
+
+  /**
+   * Specify the ARIA label for the toolbar.
+   */
+  export let ariaLabel = "data table toolbar";
 
   import { setContext } from "svelte";
   import { writable } from "svelte/store";
 
   let ref = null;
 
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
   const overflowVisible = writable(false);
 
-  setContext("Toolbar", {
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
+  const batchActionsActive = writable(false);
+
+  /**
+   * @type {(visible: boolean) => void}
+   */
+  const setOverflowVisible = (visible) => {
+    overflowVisible.set(visible);
+    if (ref) ref.style.overflow = visible ? "visible" : "inherit";
+  };
+
+  setContext("carbon:Toolbar", {
     overflowVisible,
-    setOverflowVisible: (visible) => {
-      overflowVisible.set(visible);
-      if (ref) ref.style.overflow = visible ? "visible" : "inherit";
-    },
+    setOverflowVisible,
+    batchActionsActive,
   });
 </script>
 
 <section
   bind:this={ref}
-  aria-label="data table toolbar"
+  aria-label={ariaLabel}
   class:bx--table-toolbar={true}
   class:bx--table-toolbar--small={size === "sm"}
   class:bx--table-toolbar--normal={size === "default"}

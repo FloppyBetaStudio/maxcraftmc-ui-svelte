@@ -1,12 +1,16 @@
 <script>
   /**
-   * Specify the size of the link
+   * @template [Icon=any]
+   */
+
+  /**
+   * Specify the size of the link.
    * @type {"sm" | "lg"}
    */
   export let size = undefined;
 
   /**
-   * Specify the href value
+   * Specify the href value.
    * @type {string}
    */
   export let href = undefined;
@@ -15,11 +19,11 @@
   export let inline = false;
 
   /**
-   * Specify the icon to render
-   * `inline` must be `false`
-   * @type {any}
+   * Specify the icon to render.
+   * `inline` must be `false`.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
   /** Set to `true` to disable the checkbox */
   export let disabled = false;
@@ -27,7 +31,10 @@
   /** Set to `true` to allow visited styles */
   export let visited = false;
 
-  /** Obtain a reference to the top-level HTML element */
+  /**
+   * Obtain a reference to the top-level HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 </script>
 
@@ -50,13 +57,15 @@
     on:mouseover
     on:mouseenter
     on:mouseleave
+    on:focus
+    on:blur
+    on:keydown
+    on:keyup
   >
     <slot />
     {#if !inline && ($$slots.icon || icon)}
       <div class:bx--link__icon={true}>
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
       </div>
     {/if}
   </a>
@@ -76,13 +85,15 @@
     on:mouseover
     on:mouseenter
     on:mouseleave
+    on:focus
+    on:blur
+    on:keydown
+    on:keyup
   >
     <slot />
     {#if !inline && ($$slots.icon || icon)}
       <div class:bx--link__icon={true}>
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
       </div>
     {/if}
   </a>

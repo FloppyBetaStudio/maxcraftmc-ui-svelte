@@ -1,25 +1,43 @@
 <script>
   /**
    * Specify the title of the accordion item heading.
-   * Alternatively, use the "title" slot (e.g., `<div slot="title">...</div>`)
+   * Alternatively, use the "title" slot.
+   * @example
+   * ```svelte
+   * <AccordionItem>
+   *   <div slot="title">Custom Title</div>
+   * </AccordionItem>
+   * ```
    */
   export let title = "title";
 
-  /** Set to `true` to open the first accordion item */
+  /**
+   * Set to `true` to open the first accordion item.
+   * @bindable writable
+   */
   export let open = false;
 
-  /** Set to `true` to disable the accordion item */
+  /**
+   * Set to `true` to disable the accordion item.
+   * @bindable writable
+   */
   export let disabled = false;
 
   /** Specify the ARIA label for the accordion item chevron icon */
   export let iconDescription = "Expand/Collapse";
 
-  import { onMount, getContext } from "svelte";
+  /**
+   * Obtain a reference to the heading button HTML element.
+   * @bindable readonly
+   */
+  export let ref = null;
+
+  import { getContext, onMount } from "svelte";
   import ChevronRight from "../icons/ChevronRight.svelte";
 
   let initialDisabled = disabled;
 
-  const ctx = getContext("Accordion");
+  const ctx = getContext("carbon:Accordion");
   const unsubscribe = ctx.disableItems.subscribe((value) => {
     if (!value && initialDisabled) return;
     disabled = value;
@@ -48,6 +66,7 @@
   }}
 >
   <button
+    bind:this={ref}
     type="button"
     class:bx--accordion__heading={true}
     title={iconDescription}
@@ -62,8 +81,8 @@
     on:mouseenter
     on:mouseleave
     on:keydown
-    on:keydown={({ key }) => {
-      if (open && key === "Escape") {
+    on:keydown={(event) => {
+      if (open && event.key === "Escape") {
         open = false;
       }
     }}
@@ -73,7 +92,5 @@
       <slot name="title">{title}</slot>
     </div>
   </button>
-  <div class:bx--accordion__content={true}>
-    <slot />
-  </div>
+  <div class:bx--accordion__content={true}><slot /></div>
 </li>

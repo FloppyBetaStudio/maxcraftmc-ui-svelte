@@ -1,38 +1,82 @@
 <script>
-  /** Set to `true` to toggle the expanded state */
+  /**
+   * Set to `true` to toggle the expanded state.
+   * @bindable writable
+   */
   export let expanded = false;
 
   /** Specify the `href` attribute */
   export let href = "/";
 
   /**
-   * Specify the text
+   * Specify the text.
    * @type {string}
    */
   export let text = undefined;
 
-  /** Obtain a reference to the HTML anchor element */
+  /**
+   * Obtain a reference to the HTML anchor element.
+   * @type {HTMLAnchorElement | null}
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { setContext } from "svelte";
+  import { setContext, tick } from "svelte";
   import { writable } from "svelte/store";
   import ChevronDown from "../icons/ChevronDown.svelte";
+  import { isOutsideClick } from "../utils/isOutsideClick.js";
 
+  /**
+   * @type {import("svelte/store").Writable<Record<string, boolean>>}
+   */
   const selectedItems = writable({});
+  /**
+   * @type {import("svelte/store").Writable<ReadonlyArray<HTMLElement>>}
+   */
+  const menuItems = writable([]);
 
   let menuRef = null;
 
-  setContext("HeaderNavMenu", {
+  /**
+   * @type {(item: { id: string; isSelected: boolean }) => void}
+   */
+  const updateSelectedItems = (item) => {
+    selectedItems.update((_items) => ({
+      ..._items,
+      [item.id]: item.isSelected,
+    }));
+  };
+
+  /**
+   * @type {(element: HTMLElement) => void}
+   */
+  const registerMenuItem = (element) => {
+    menuItems.update((items) => [...items, element]);
+  };
+
+  /**
+   * @type {(element: HTMLElement) => void}
+   */
+  const unregisterMenuItem = (element) => {
+    menuItems.update((items) => items.filter((item) => item !== element));
+  };
+
+  /**
+   * @type {() => Promise<void>}
+   */
+  const closeMenu = async () => {
+    expanded = false;
+    await tick();
+    ref?.focus();
+  };
+
+  setContext("carbon:HeaderNavMenu", {
     selectedItems,
-    updateSelectedItems(item) {
-      selectedItems.update((_items) => ({
-        ..._items,
-        [item.id]: item.isSelected,
-      }));
-    },
-    closeMenu() {
-      expanded = false;
-    },
+    menuItems,
+    updateSelectedItems,
+    registerMenuItem,
+    unregisterMenuItem,
+    closeMenu,
   });
 
   $: isCurrentSubmenu =
@@ -40,10 +84,8 @@
 </script>
 
 <svelte:window
-  on:click={({ target }) => {
-    if (!ref.contains(target)) {
-      expanded = false;
-    }
+  on:click={(event) => {
+    if (isOutsideClick(event, ref)) expanded = false;
   }}
 />
 
@@ -51,15 +93,15 @@
   role="none"
   class:bx--header__submenu={true}
   class:bx--header__submenu--current={isCurrentSubmenu}
-  on:click={(e) => {
-    if (!menuRef.contains(e.target)) {
-      e.preventDefault();
+  on:click={(event) => {
+    if (!menuRef.contains(event.target)) {
+      event.preventDefault();
     }
     expanded = !expanded;
   }}
-  on:keydown={(e) => {
-    if (e.key === "Enter") {
-      e.stopPropagation();
+  on:keydown={(event) => {
+    if (event.key === "Enter") {
+      event.stopPropagation();
       expanded = !expanded;
     }
   }}
@@ -77,10 +119,46 @@
     style:z-index={1}
     {...$$restProps}
     on:keydown
-    on:keydown={(e) => {
-      if (e.key === " ") e.preventDefault();
-      if (e.key === "Enter" || e.key === " ") {
+    on:keydown={async (event) => {
+      if (event.key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        const wasExpanded = expanded;
         expanded = !expanded;
+        if (!wasExpanded && expanded && $menuItems.length > 0) {
+          // Only focus first item when opening (not closing)
+          await tick();
+          $menuItems[0]?.focus();
+        }
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        // Let the li handler toggle the expanded state
+        // Just focus the first item if opening
+        if (!expanded && $menuItems.length > 0) {
+          await tick();
+          $menuItems[0]?.focus();
+        }
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (!expanded) {
+          expanded = true;
+        }
+        // Focus first item
+        await tick();
+        $menuItems[0]?.focus();
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (!expanded) {
+          expanded = true;
+        }
+        // Focus last item
+        await tick();
+        $menuItems[$menuItems.length - 1]?.focus();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        expanded = false;
+        await tick();
+        ref?.focus();
       }
     }}
     on:click|preventDefault

@@ -3,18 +3,21 @@
   export let isSelected = false;
 
   /**
-   * Specify the `href` attribute
+   * Specify the `href` attribute.
    * @type {string}
    */
   export let href = undefined;
 
   /**
-   * Specify the item text
+   * Specify the item text.
    * @type {string}
    */
   export let text = undefined;
 
-  /** Obtain a reference to the HTML anchor element */
+  /**
+   * Obtain a reference to the HTML anchor element.
+   * @bindable readonly
+   */
   export let ref = null;
 </script>
 

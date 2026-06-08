@@ -1,18 +1,18 @@
 # Compatibility Policy
 
-The compatibility target is fixed to `carbon-components-svelte@0.89.4`.
+The compatibility target is fixed to `carbon-components-svelte@0.108.0`.
 
 ## Guaranteed Surface
 
 This package preserves:
 
 - `src/index.js` named exports
-- `types/index.d.ts` named exports
+- `src/index.d.ts` named exports
 - component directory names
 - component file names
 - CSS entrypoints under `css/`
 - common props, events, slots, and rest-prop behavior inherited from Carbon
-  Svelte 0.89.4
+  Svelte 0.108.0
 
 The API check script compares the package exports against the type export list:
 
@@ -38,7 +38,7 @@ cannot see.
 
 Before changing a component API:
 
-1. Compare against `carbon-components-svelte@0.89.4`.
+1. Compare against `carbon-components-svelte@0.108.0`.
 2. Preserve existing prop/event/slot names unless a breaking release is planned.
 3. Run `npm run check`.
 
@@ -51,4 +51,4 @@ Use semantic versioning:
 
 - Patch: style fixes, docs, compatibility bug fixes
 - Minor: new MaxCraft styling hooks or non-breaking helper exports
-- Major: breaking API changes against Carbon Svelte 0.89.4
+- Major: breaking API changes against Carbon Svelte 0.108.0

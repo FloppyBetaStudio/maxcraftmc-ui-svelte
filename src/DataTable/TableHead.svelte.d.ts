@@ -1,0 +1,23 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["thead"];
+
+type $Props = {
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type TableHeadProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class TableHead extends SvelteComponentTyped<
+  TableHeadProps,
+  {
+    click: WindowEventMap["click"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  { default: Record<string, never> }
+> {}

@@ -1,0 +1,72 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["div"];
+
+type $Props = {
+  /**
+   * Set the size of the list box.
+   * @default undefined
+   */
+  size?: "sm" | "lg" | "xl";
+
+  /**
+   * Set the type of the list box.
+   * @default "default"
+   */
+  type?: "default" | "inline";
+
+  /**
+   * Set to `true` to open the list box
+   * @default false
+   */
+  open?: boolean;
+
+  /**
+   * Set to `true` to enable the light variant
+   * @default false
+   */
+  light?: boolean;
+
+  /**
+   * Set to `true` to disable the list box
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Set to `true` to indicate an invalid state
+   * @default false
+   */
+  invalid?: boolean;
+
+  /**
+   * Specify the invalid state text
+   * @default ""
+   */
+  invalidText?: string;
+
+  /**
+   * Set to `true` to indicate a warning state
+   * @default false
+   */
+  warn?: boolean;
+
+  /**
+   * Specify the warning state text
+   * @default ""
+   */
+  warnText?: string;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type ListBoxProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class ListBox extends SvelteComponentTyped<
+  ListBoxProps,
+  { click: WindowEventMap["click"]; keydown: WindowEventMap["keydown"] },
+  { default: Record<string, never> }
+> {}

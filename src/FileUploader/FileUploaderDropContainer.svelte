@@ -5,14 +5,15 @@
    */
 
   /**
-   * Specify the accepted file types
+   * Specify the accepted file types.
    * @type {ReadonlyArray<string>}
    */
   export let accept = [];
 
   /**
-   * Obtain a reference to the uploaded files
+   * Obtain a reference to the uploaded files.
    * @type {ReadonlyArray<File>}
+   * @bindable writable
    */
   export let files = [];
 
@@ -21,7 +22,7 @@
 
   /**
    * Override the default behavior of validating uploaded files.
-   * By default, files are not validated
+   * By default, files are not validated.
    * @type {(files: ReadonlyArray<File>) => ReadonlyArray<File>}
    */
   export let validateFiles = (files) => files;
@@ -35,16 +36,22 @@
   /** Set to `true` to disable the input */
   export let disabled = false;
 
-  /** Specify `tabindex` attribute */
+  /**
+   * Specify `tabindex` attribute
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /** Specify a name attribute for the input */
   export let name = "";
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { createEventDispatcher } from "svelte";
@@ -59,24 +66,25 @@
   class:bx--file={true}
   {...$$restProps}
   on:dragover
-  on:dragover|preventDefault|stopPropagation={({ dataTransfer }) => {
+  on:dragover|preventDefault|stopPropagation={(event) => {
     if (!disabled) {
       over = true;
-      dataTransfer.dropEffect = "copy";
+      event.dataTransfer.dropEffect = "copy";
     }
   }}
   on:dragleave
-  on:dragleave|preventDefault|stopPropagation={({ dataTransfer }) => {
+  on:dragleave|preventDefault|stopPropagation={(event) => {
     if (!disabled) {
       over = false;
-      dataTransfer.dropEffect = "move";
+      event.dataTransfer.dropEffect = "move";
     }
   }}
   on:drop
-  on:drop|preventDefault|stopPropagation={({ dataTransfer }) => {
+  on:drop|preventDefault|stopPropagation={(event) => {
     if (!disabled) {
       over = false;
-      files = validateFiles([...dataTransfer.files]);
+      const newFiles = validateFiles([...event.dataTransfer.files]);
+      files = multiple ? [...files, ...newFiles] : newFiles;
       dispatch("add", files);
       dispatch("change", files);
     }
@@ -90,8 +98,8 @@
     class:bx--file-browse-btn={true}
     class:bx--file-browse-btn--disabled={disabled}
     on:keydown
-    on:keydown={({ key }) => {
-      if (key === " " || key === "Enter") {
+    on:keydown={(event) => {
+      if (event.key === " " || event.key === "Enter") {
         ref.click();
       }
     }}
@@ -101,9 +109,7 @@
       class:bx--file__drop-container={true}
       class:bx--file__drop-container--drag-over={over}
     >
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </div>
   </label>
   <input
@@ -116,14 +122,15 @@
     {name}
     {multiple}
     class:bx--file-input={true}
-    on:change={({ target }) => {
-      files = validateFiles([...target.files]);
+    on:change={(event) => {
+      const newFiles = validateFiles([...event.target.files]);
+      files = multiple ? [...files, ...newFiles] : newFiles;
       dispatch("add", files);
       dispatch("change", files);
     }}
     on:click
-    on:click={({ target }) => {
-      target.value = null;
+    on:click={(event) => {
+      event.target.value = null;
     }}
-  />
+  >
 </div>

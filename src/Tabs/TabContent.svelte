@@ -1,16 +1,23 @@
 <script>
   /** Set an id for the top-level element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
 
-  const { selectedContent, addContent, tabs, contentById } = getContext("Tabs");
+  const { selectedContent, addContent, removeContent, tabs, contentById } =
+    getContext("carbon:Tabs");
 
   addContent({ id });
 
+  onMount(() => {
+    return () => {
+      removeContent(id);
+    };
+  });
+
   $: selected = $selectedContent === id;
-  $: index = $contentById[id].index;
-  $: tabId = $tabs[index].id;
+  $: index = $contentById[id]?.index ?? 0;
+  $: tabId = $tabs[index]?.id;
 </script>
 
 <div

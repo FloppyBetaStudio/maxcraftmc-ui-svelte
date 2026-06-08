@@ -1,0 +1,42 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["label"];
+
+type $Props = {
+  /**
+   * Set to `true` to use as a header
+   * @default false
+   */
+  head?: boolean;
+
+  /**
+   * Set to `true` to render a label slot
+   * @default false
+   */
+  label?: boolean;
+
+  /**
+   * Specify the tabindex
+   * @default "0"
+   */
+  tabindex?: number | string | undefined;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type StructuredListRowProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class StructuredListRow extends SvelteComponentTyped<
+  StructuredListRowProps,
+  {
+    click: WindowEventMap["click"];
+    keydown: WindowEventMap["keydown"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  { default: Record<string, never> }
+> {}

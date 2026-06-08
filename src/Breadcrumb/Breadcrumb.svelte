@@ -7,6 +7,15 @@
   /** Set to `true` to display skeleton state */
   export let skeleton = false;
 
+  /** Specify the ARIA label for the nav */
+  export let labelText = "Breadcrumb";
+
+  /**
+   * Specify the size of the breadcrumb.
+   * @type {"sm" | "md"}
+   */
+  export let size = "md";
+
   import BreadcrumbSkeleton from "./BreadcrumbSkeleton.svelte";
 </script>
 
@@ -14,6 +23,7 @@
 {#if skeleton}
   <BreadcrumbSkeleton
     {noTrailingSlash}
+    {size}
     {...$$restProps}
     on:click
     on:mouseover
@@ -23,7 +33,7 @@
 {:else}
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <nav
-    aria-label="Breadcrumb"
+    aria-label={labelText}
     {...$$restProps}
     on:click
     on:mouseover
@@ -33,6 +43,7 @@
     <ol
       class:bx--breadcrumb={true}
       class:bx--breadcrumb--no-trailing-slash={noTrailingSlash}
+      class:bx--breadcrumb--sm={size === "sm"}
     >
       <slot />
     </ol>

@@ -1,10 +1,11 @@
 <script>
   /**
-   * @event {{ timeout: boolean }} close
+   * @event close
+   * @property {boolean} timeout
    */
 
   /**
-   * Specify the kind of notification
+   * Specify the kind of notification.
    * @type {"error" | "info" | "info-square" | "success" | "warning" | "warning-alt"}
    */
   export let kind = "error";
@@ -15,7 +16,10 @@
   /** Set the timeout duration (ms) to hide the notification after opening it */
   export let timeout = 0;
 
-  /** Set the `role` attribute */
+  /**
+   * Specify the ARIA `role` for the notification container.
+   * @type {"alert" | "log" | "status"}
+   */
   export let role = "alert";
 
   /** Specify the title text */
@@ -26,12 +30,6 @@
 
   /** Specify the caption text */
   export let caption = "";
-
-  /**
-   * Specify the ARIA label for the status icon
-   * @type {string}
-   * */
-  export let statusIconDescription = kind + " icon";
 
   /** Specify the ARIA label for the close button */
   export let closeButtonDescription = "Close notification";
@@ -45,18 +43,23 @@
    */
   export let fullWidth = false;
 
+  /**
+   * Set to `true` to show the notification, `false` to hide it.
+   * @bindable writable
+   */
+  export let open = true;
+
   import { createEventDispatcher, onMount } from "svelte";
+  import { createTimeoutDismiss } from "../utils/timeoutDismiss.js";
   import NotificationButton from "./NotificationButton.svelte";
   import NotificationIcon from "./NotificationIcon.svelte";
 
   const dispatch = createEventDispatcher();
 
-  let open = true;
-  let timeoutId = undefined;
+  const dismiss = createTimeoutDismiss();
 
   function close(closeFromTimeout) {
-    // Clear the timer if the close button was clicked.
-    clearTimeout(timeoutId);
+    dismiss.clear();
 
     const shouldContinue = dispatch(
       "close",
@@ -68,25 +71,9 @@
     }
   }
 
-  onMount(() => {
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  });
+  $: dismiss.sync(open, timeout, () => close(true));
 
-  $: if (typeof window !== "undefined") {
-    /**
-     * Clear the timer if {@link timeout} changes.
-     * If set to `0`, no new timeout is started.
-     * Else, a new timeout is started if {@link open} is not set to `false`.
-     */
-    clearTimeout(timeoutId);
-
-    /** Only start the timer of {@link open} has not been set to `false`. */
-    if (open && timeout) {
-      timeoutId = setTimeout(() => close(true), timeout);
-    }
-  }
+  onMount(() => () => dismiss.clear());
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -108,17 +95,21 @@
     on:mouseenter
     on:mouseleave
   >
-    <NotificationIcon {kind} iconDescription={statusIconDescription} />
+    <NotificationIcon {kind} />
     <div class:bx--toast-notification__details={true}>
       <h3 class:bx--toast-notification__title={true}>
-        <slot name="title">{title}</slot>
+        <slot name="titleChildren">{title}</slot>
       </h3>
-      <div class:bx--toast-notification__subtitle={true}>
-        <slot name="subtitle">{subtitle}</slot>
-      </div>
-      <div class:bx--toast-notification__caption={true}>
-        <slot name="caption">{caption}</slot>
-      </div>
+      {#if subtitle || $$slots.subtitleChildren}
+        <div class:bx--toast-notification__subtitle={true}>
+          <slot name="subtitleChildren">{subtitle}</slot>
+        </div>
+      {/if}
+      {#if caption || $$slots.captionChildren}
+        <div class:bx--toast-notification__caption={true}>
+          <slot name="captionChildren">{caption}</slot>
+        </div>
+      {/if}
       <slot />
     </div>
     {#if !hideCloseButton}

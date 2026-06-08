@@ -5,45 +5,56 @@
    */
 
   /**
-   * Specify the image source
+   * Specify the image source.
    */
   export let src = "";
 
   /**
-   * Specify the image alt text
+   * Specify the image alt text.
    */
   export let alt = "";
 
   /**
-   * Specify the aspect ratio for the image wrapper
+   * Specify the aspect ratio for the image wrapper.
    * @type {"2x1" | "16x9" | "4x3" | "1x1" | "3x4" | "3x2" | "9x16" | "1x2"}
    */
   export let ratio = undefined;
 
   /**
-   * Set to `true` when `loaded` is `true` and `error` is false
+   * Set to `true` when `loaded` is `true` and `error` is false.
+   * @bindable readonly
    */
   export let loading = false;
 
   /**
-   * Set to `true` when the image is loaded
+   * Set to `true` when the image is loaded.
+   * @bindable readonly
    */
   export let loaded = false;
 
   /**
-   * Set to `true` if an error occurs when loading the image
+   * Set to `true` if an error occurs when loading the image.
+   * @bindable readonly
    */
   export let error = false;
 
   /**
-   * Set to `true` to fade in the image on load
-   * The duration uses the `fast-02` value following Carbon guidelines on motion
+   * Set to `true` to fade in the image on load.
+   * The duration uses the `fast-02` value following Carbon guidelines on motion.
    */
   export let fadeIn = false;
 
   /**
-   * Method invoked to load the image provided a `src` value
+   * Method invoked to load the image provided a `src` value.
+   * If no URL is provided, uses the component's `src` prop.
    * @type {(url?: string) => void}
+   * @example
+   * ```svelte
+   * <ImageLoader bind:this={loader} src="default.jpg" />
+   * <button on:click={() => loader.loadImage("new-image.jpg")}>
+   *   Load New Image
+   * </button>
+   * ```
    */
   export const loadImage = (url) => {
     if (image != null) image = null;
@@ -55,7 +66,7 @@
     image.onerror = () => (error = true);
   };
 
-  import { onMount, createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
   import { fade } from "svelte/transition";
   import AspectRatio from "../AspectRatio/AspectRatio.svelte";
 
@@ -88,7 +99,7 @@
         {src}
         {alt}
         transition:fade|local={{ duration: fadeIn ? fast02 : 0 }}
-      />
+      >
     {/if}
   {/key}
   {#if error}
@@ -107,7 +118,7 @@
           {src}
           {alt}
           transition:fade|local={{ duration: fadeIn ? fast02 : 0 }}
-        />
+        >
       {/if}
     {/key}
     {#if error}

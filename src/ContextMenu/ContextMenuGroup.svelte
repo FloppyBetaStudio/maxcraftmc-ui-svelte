@@ -1,5 +1,8 @@
 <script>
-  /** @type {ReadonlyArray<string>} */
+  /**
+   * @type {ReadonlyArray<string>}
+   * @bindable writable
+   */
   export let selectedIds = [];
 
   /** Specify the label text */
@@ -8,22 +11,35 @@
   import { setContext } from "svelte";
   import { writable } from "svelte/store";
 
+  /**
+   * @type {import("svelte/store").Writable<ReadonlyArray<string>>}
+   */
   const currentIds = writable([]);
 
-  setContext("ContextMenuGroup", {
+  /**
+   * @type {(data: { id: string }) => void}
+   */
+  const addOption = ({ id }) => {
+    if (!selectedIds.includes(id)) {
+      selectedIds = [...selectedIds, id];
+    }
+  };
+
+  /**
+   * @type {(data: { id: string }) => void}
+   */
+  const toggleOption = ({ id }) => {
+    if (selectedIds.includes(id)) {
+      selectedIds = selectedIds.filter((_) => _ !== id);
+    } else {
+      selectedIds = [...selectedIds, id];
+    }
+  };
+
+  setContext("carbon:ContextMenuGroup", {
     currentIds,
-    addOption: ({ id }) => {
-      if (!selectedIds.includes(id)) {
-        selectedIds = [...selectedIds, id];
-      }
-    },
-    toggleOption: ({ id }) => {
-      if (!selectedIds.includes(id)) {
-        selectedIds = [...selectedIds, id];
-      } else {
-        selectedIds = selectedIds.filter((_) => _ !== id);
-      }
-    },
+    addOption,
+    toggleOption,
   });
 
   $: currentIds.set(selectedIds);

@@ -1,5 +1,9 @@
 import { onMount } from "svelte";
 import { get, writable } from "svelte/store";
+import {
+  acquireBodyScrollLock,
+  releaseBodyScrollLock,
+} from "../utils/bodyScrollLock.js";
 
 /** A set of stores indicating whether a modal is open. */
 const stores = new Set();
@@ -7,8 +11,9 @@ const stores = new Set();
 /** Store for the number of open modals. */
 const modalsOpen = writable(0);
 
-const updateModalsOpen = () =>
+function updateModalsOpen() {
   modalsOpen.set([...stores].filter((open) => get(open)).length);
+}
 
 /**
  * Adds a modal's store to the open modal tracking.
@@ -17,8 +22,8 @@ const updateModalsOpen = () =>
  * @param {import('svelte/store').Readable<boolean>} openStore
  *   Store that indicates whether the modal is opened.
  */
-export const trackModal = (openStore) =>
-  onMount(() => {
+export function trackModal(openStore) {
+  return onMount(() => {
     stores.add(openStore);
     const unsubscribe = openStore.subscribe(updateModalsOpen);
 
@@ -29,8 +34,15 @@ export const trackModal = (openStore) =>
       updateModalsOpen();
     };
   });
+}
 
+let modalsHoldLock = false;
 modalsOpen.subscribe((openCount) => {
-  if (typeof document !== "undefined")
-    document.body.classList.toggle("bx--body--with-modal-open", openCount > 0);
+  if (openCount > 0 && !modalsHoldLock) {
+    modalsHoldLock = true;
+    acquireBodyScrollLock();
+  } else if (openCount === 0 && modalsHoldLock) {
+    modalsHoldLock = false;
+    releaseBodyScrollLock();
+  }
 });

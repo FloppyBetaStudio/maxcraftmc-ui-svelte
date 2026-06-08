@@ -1,27 +1,45 @@
+<script context="module">
+  /** @type {Record<CarbonTheme, string>} */
+  export const themes = {
+    white: "White",
+    g10: "Gray 10",
+    g80: "Gray 80",
+    g90: "Gray 90",
+    g100: "Gray 100",
+  };
+</script>
+
 <script>
   /**
-   * Dynamic, client-side theming using CSS variables
-   * Only works with `carbon-components-svelte/css/all.css`
+   * Dynamic, client-side theming using CSS variables.
+   * Only works with `carbon-components-svelte/css/all.css`.
+   */
+
+  /**
+   * @template [Tokens=Record<string, any>]
    */
 
   /**
    * @typedef {"white" | "g10" | "g80" | "g90" | "g100"} CarbonTheme
-   * @event {{ theme: CarbonTheme; }} update
+   * @event update
+   * @type {object}
+   * @property {CarbonTheme} theme
    * @slot {{ theme: CarbonTheme; }}
    */
 
   /**
-   * Set the current Carbon theme
+   * Set the current Carbon theme.
    * @type {CarbonTheme}
+   * @bindable writable
    */
   export let theme = "white";
 
   /**
-   * Customize a theme with your own tokens
-   * @see https://carbondesignsystem.com/guidelines/themes/overview#customizing-a-theme
-   * @type {{ [token: string]: any; }}
+   * Customize a theme with your own tokens.
+   * @see https://carbondesignsystem.com/elements/themes/overview/#customizing-a-theme
+   * @type {Tokens}
    */
-  export let tokens = {};
+  export let tokens = /** @type {Tokens} */ ({});
 
   /** Set to `true` to persist the theme using window.localStorage */
   export let persist = false;
@@ -30,13 +48,13 @@
   export let persistKey = "theme";
 
   /**
-   * Render a toggle or select dropdown to control the theme
-   * @type {"toggle" | "select"}
+   * Render a toggle, select, or dropdown to control the theme.
+   * @type {"toggle" | "select" | "dropdown"}
    */
   export let render = undefined;
 
   /**
-   * Override the default toggle props
+   * Override the default toggle props.
    * @type {import("../Toggle/Toggle.svelte").ToggleProps & { themes?: [labelA: CarbonTheme, labelB: CarbonTheme]; }}
    */
   export let toggle = {
@@ -47,21 +65,12 @@
     hideLabel: false,
   };
 
-  /** @type {Record<CarbonTheme, string>} */
-  const themes = {
-    white: "White",
-    g10: "Gray 10",
-    g80: "Gray 80",
-    g90: "Gray 90",
-    g100: "Gray 100",
-  };
-
   /** @type {CarbonTheme} */
   const themeKeys = Object.keys(themes);
 
   /**
-   * Override the default select props
-   * @type {import("../Select/Select.svelte").SelectProps & { themes?: CarbonTheme[]; }}
+   * Override the default select props.
+   * @type {import("../Select/Select.svelte").SelectProps<CarbonTheme> & { themes?: CarbonTheme[]; }}
    */
   export let select = {
     themes: themeKeys,
@@ -69,22 +78,49 @@
     hideLabel: false,
   };
 
-  import { createEventDispatcher } from "svelte";
-  import Toggle from "../Toggle/Toggle.svelte";
+  /**
+   * Override the default dropdown props.
+   * @type {Omit<import("../Dropdown/Dropdown.svelte").DropdownProps, "items" | "selectedId"> & { themes?: CarbonTheme[]; }}
+   */
+  export let dropdown = {
+    themes: themeKeys,
+    labelText: "Themes",
+    hideLabel: false,
+  };
+
+  import { afterUpdate, createEventDispatcher } from "svelte";
+  import Dropdown from "../Dropdown/Dropdown.svelte";
+  import LocalStorage from "../LocalStorage/LocalStorage.svelte";
   import Select from "../Select/Select.svelte";
   import SelectItem from "../Select/SelectItem.svelte";
-  import LocalStorage from "../LocalStorage/LocalStorage.svelte";
+  import Toggle from "../Toggle/Toggle.svelte";
 
   const dispatch = createEventDispatcher();
 
+  let prevTheme = theme;
+  let isInitialRender = true;
+
+  afterUpdate(() => {
+    if (prevTheme !== theme) {
+      prevTheme = theme;
+      if (!isInitialRender) {
+        dispatch("update", { theme });
+      }
+    }
+    isInitialRender = false;
+  });
+
   $: if (typeof window !== "undefined") {
-    Object.entries(tokens).forEach(([token, value]) => {
+    for (const [token, value] of Object.entries(tokens)) {
       document.documentElement.style.setProperty(`--cds-${token}`, value);
-    });
+    }
 
     if (theme in themes) {
       document.documentElement.setAttribute("theme", theme);
-      dispatch("update", { theme });
+      document.documentElement.style.setProperty(
+        "color-scheme",
+        theme === "white" || theme === "g10" ? "light" : "dark",
+      );
     } else {
       console.warn(
         `[Theme.svelte] invalid theme "${theme}". Value must be one of: ${JSON.stringify(
@@ -104,8 +140,8 @@
   <Toggle
     {...toggleProps}
     toggled={theme === toggleThemes[1]}
-    on:toggle={({ detail }) => {
-      theme = detail.toggled ? toggleThemes[1] : toggleThemes[0];
+    on:toggle={(event) => {
+      theme = event.detail.toggled ? toggleThemes[1] : toggleThemes[0];
     }}
   />
 {:else if render === "select"}
@@ -115,6 +151,16 @@
       <SelectItem value={theme} text={themes[theme]} />
     {/each}
   </Select>
+{:else if render === "dropdown"}
+  {@const { themes: dropdownThemes, ...dropdownProps } = dropdown}
+  <Dropdown
+    {...dropdownProps}
+    items={dropdownThemes.map((t) => ({ id: t, text: themes[t] }))}
+    selectedId={theme}
+    on:select={(event) => {
+      theme = event.detail.selectedId;
+    }}
+  />
 {/if}
 
 <slot {theme} />

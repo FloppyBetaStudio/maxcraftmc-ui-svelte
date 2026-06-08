@@ -7,14 +7,14 @@
   let ref = null;
   let open = false;
 
-  const ctx = getContext("Tooltip");
-  const unsubscribe = ctx.tooltipOpen.subscribe((tooltipOpen) => {
+  const ctx = getContext("carbon:Tooltip") ?? null;
+  const unsubscribe = ctx?.tooltipOpen.subscribe((tooltipOpen) => {
     open = tooltipOpen;
   });
 
   onMount(() => {
     return () => {
-      unsubscribe();
+      unsubscribe?.();
     };
   });
 
@@ -24,6 +24,4 @@
   }
 </script>
 
-<div bind:this={ref} class:bx--tooltip__footer={true}>
-  <slot />
-</div>
+<div bind:this={ref} class:bx--tooltip__footer={true}><slot /></div>

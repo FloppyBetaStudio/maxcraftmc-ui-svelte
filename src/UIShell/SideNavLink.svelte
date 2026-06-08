@@ -1,26 +1,33 @@
 <script>
+  /**
+   * @template [Icon=any]
+   */
+
   /** Set to `true` to select the current link */
   export let isSelected = false;
 
   /**
-   * Specify the `href` attribute
+   * Specify the `href` attribute.
    * @type {string}
    */
   export let href = undefined;
 
   /**
-   * Specify the text
+   * Specify the text.
    * @type {string}
    */
   export let text = undefined;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
-  /** Obtain a reference to the HTML anchor element */
+  /**
+   * Obtain a reference to the HTML anchor element.
+   * @bindable readonly
+   */
   export let ref = null;
 </script>
 
@@ -40,15 +47,9 @@
         class:bx--side-nav__icon={true}
         class:bx--side-nav__icon--small={true}
       >
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
       </div>
     {/if}
-    <span class:bx--side-nav__link-text={true}>
-      <slot>
-        {text}
-      </slot>
-    </span>
+    <span class:bx--side-nav__link-text={true}> <slot> {text} </slot> </span>
   </a>
 </li>

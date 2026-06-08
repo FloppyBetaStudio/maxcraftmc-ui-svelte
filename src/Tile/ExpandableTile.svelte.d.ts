@@ -1,0 +1,101 @@
+import { SvelteComponentTyped } from "svelte";
+import type { HTMLAttributes } from "svelte/elements";
+
+type $RestProps = HTMLAttributes<HTMLElement>;
+
+type $Props = {
+  /**
+   * Set to `true` to expand the tile.
+   * @default false
+   */
+  expanded?: boolean;
+
+  /**
+   * Set to `true` to enable the light variant
+   * @default false
+   */
+  light?: boolean;
+
+  /**
+   * Specify the max height of the tile  (number of pixels).
+   * @default 0
+   */
+  tileMaxHeight?: number;
+
+  /**
+   * Specify the padding of the tile (number of pixels).
+   * @default 0
+   */
+  tilePadding?: number;
+
+  /**
+   * Specify the icon text of the collapsed tile
+   * @default "Interact to expand Tile"
+   */
+  tileCollapsedIconText?: string;
+
+  /**
+   * Specify the icon text of the expanded tile
+   * @default "Interact to collapse Tile"
+   */
+  tileExpandedIconText?: string;
+
+  /**
+   * Specify the icon label of the expanded tile
+   * @default ""
+   */
+  tileExpandedLabel?: string;
+
+  /**
+   * Specify the icon label of the collapsed tile
+   * @default ""
+   */
+  tileCollapsedLabel?: string;
+
+  /**
+   * Specify the tabindex
+   * @default "0"
+   */
+  tabindex?: number | string | undefined;
+
+  /**
+   * Set an id for the top-level div element
+   * @default `ccs-${Math.random().toString(36)}`
+   */
+  id?: string;
+
+  /**
+   * Set to `true` if the tile contains interactive content
+   * (e.g., links, buttons, inputs). The tile will render as
+   * a `div` instead of a `button` to avoid invalid HTML nesting,
+   * and the expand/collapse toggle moves to the chevron button.
+   * @default false
+   */
+  hasInteractiveContent?: boolean;
+
+  /**
+   * Obtain a reference to the top-level element.
+   * @default null
+   */
+  ref?: null | HTMLElement;
+
+  above?: (this: void) => void;
+
+  below?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type ExpandableTileProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class ExpandableTile extends SvelteComponentTyped<
+  ExpandableTileProps,
+  {
+    click: WindowEventMap["click"];
+    keypress: WindowEventMap["keypress"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  { above: Record<string, never>; below: Record<string, never> }
+> {}

@@ -1,23 +1,38 @@
 <script>
-  /** Set to `true` to toggle the expanded state */
+  /**
+   * @template [Icon=any]
+   */
+
+  /**
+   * Set to `true` to toggle the expanded state.
+   * @bindable writable
+   */
   export let expanded = false;
 
   /**
-   * Specify the text
+   * Specify the text.
    * @type {string}
    */
   export let text = undefined;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
-  /** Obtain a reference to the HTML button element */
+  /**
+   * Obtain a reference to the HTML button element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import ChevronDown from "../icons/ChevronDown.svelte";
+  import { isSideNavCollapsed, isSideNavRail } from "./nav-store";
+
+  $: if ($isSideNavRail && $isSideNavCollapsed) {
+    expanded = false;
+  }
 </script>
 
 <li class:bx--side-nav__item={true} class:bx--side-nav__item--icon={icon}>
@@ -33,24 +48,21 @@
     }}
   >
     {#if $$slots.icon || icon}
-      <div class:bx--side-nav__icon={true}>
-        <slot name="icon">
-          <svelte:component this={icon} />
-        </slot>
-      </div>
+      <span class:bx--side-nav__icon={true}>
+        <slot name="icon"> <svelte:component this={icon} /> </slot>
+      </span>
     {/if}
     <span class:bx--side-nav__submenu-title={true}>{text}</span>
-    <div
+    <span
       class:bx--side-nav__icon={true}
       class:bx--side-nav__icon--small={true}
       class:bx--side-nav__submenu-chevron={true}
     >
       <ChevronDown />
-    </div>
+    </span>
   </button>
-  <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
   <ul
-    role="menu"
+    inert={expanded ? undefined : "true"}
     class:bx--side-nav__menu={true}
     style:max-height={expanded ? "none" : undefined}
   >

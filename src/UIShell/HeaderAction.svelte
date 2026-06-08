@@ -1,53 +1,64 @@
 <script>
   /**
+   * @template [Icon=any]
    * @event {null} open
    * @event {null} close
    */
 
-  /** Set to `true` to open the panel */
+  /**
+   * Set to `true` to open the panel.
+   * @bindable writable
+   */
   export let isOpen = false;
 
   /**
    * Specify the icon to render when the action panel is closed.
-   * Defaults to `<Switcher size={20} />`
-   * @type {any}
+   * @type {Icon}
    */
-  export let icon = Switcher;
+  export let icon = /** @type {Icon} */ (Switcher);
 
   /**
    * Specify the icon to render when the action panel is open.
-   * Defaults to `<Close size={20} />`
-   * @type {any}
+   * @type {Icon}
    */
-  export let closeIcon = Close;
+  export let closeIcon = /** @type {Icon} */ (Close);
 
   /**
    * Specify the text displayed next to the icon.
-   * Alternatively, use the named slot "text" (e.g., `<div slot="text">...</div>`)
+   * Alternatively, use the named slot "textChildren".
    * @type {string}
+   * @example
+   * ```svelte
+   * <HeaderAction>
+   *   <div slot="textChildren">Custom Text</div>
+   * </HeaderAction>
+   * ```
    */
   export let text = undefined;
 
   /**
    * Specify an icon tooltip. The tooltip will not be displayed
-   * if either the `text` prop or a named slot="text" is used
+   * if either the `text` prop or a named slot="textChildren" is used.
    * @type {string}
    */
   export let iconDescription = undefined;
 
   /**
    * Set the alignment of the tooltip relative to the icon.
-   * Only applies when `iconDescription` is provided
+   * Only applies when `iconDescription` is provided.
    * @type {"start" | "center" | "end"}
    */
   export let tooltipAlignment = "center";
 
-  /** Obtain a reference to the button HTML element */
+  /**
+   * Obtain a reference to the button HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   /**
-   * Customize the panel transition (i.e., `transition:slide`).
-   * Set to `false` to disable the transition
+   * Customize the panel transition (i.event., `transition:slide`).
+   * Set to `false` to disable the transition.
    * @type {false | import("svelte/transition").SlideParams}
    */
   export let transition = { duration: 200 };
@@ -59,16 +70,17 @@
   import { slide } from "svelte/transition";
   import Close from "../icons/Close.svelte";
   import Switcher from "../icons/Switcher.svelte";
+  import { isOutsideClick } from "../utils/isOutsideClick.js";
 
   const dispatch = createEventDispatcher();
 
   let refPanel = null;
 
-  $: hasIconOnly = iconDescription && !(text || $$slots.text);
+  $: hasIconOnly = iconDescription && !(text || $$slots.textChildren);
   $: buttonClass = [
-    hasIconOnly && "bx--btn bx--btn--primary",
+    hasIconOnly && "bx--btn",
     hasIconOnly && "bx--tooltip__trigger bx--tooltip--a11y",
-    hasIconOnly && "bx--btn--icon-only bx--btn--icon-only--bottom",
+    hasIconOnly && "bx--btn--icon-only--bottom",
     hasIconOnly && `bx--tooltip--align-${tooltipAlignment}`,
     $$restProps.class,
   ]
@@ -77,12 +89,11 @@
 </script>
 
 <svelte:window
-  on:click={({ target }) => {
+  on:click={(event) => {
     if (
       isOpen &&
-      !ref.contains(target) &&
-      !refPanel.contains(target) &&
-      !preventCloseOnClickOutside
+      !preventCloseOnClickOutside &&
+      isOutsideClick(event, [ref, refPanel])
     ) {
       isOpen = false;
       dispatch("close");
@@ -112,12 +123,12 @@
       <svelte:component this={closeIcon} size={20} />
     </slot>
   {:else}
-    <slot name="icon">
-      <svelte:component this={icon} size={20} />
-    </slot>
+    <slot name="icon"> <svelte:component this={icon} size={20} /> </slot>
   {/if}
-  <slot name="text">
-    {#if text}<span class:bx--header__action-text={true}>{text}</span>{/if}
+  <slot name="textChildren">
+    {#if text}
+      <span class:bx--header__action-text={true}>{text}</span>
+    {/if}
   </slot>
 </button>
 {#if isOpen}
@@ -125,8 +136,6 @@
     bind:this={refPanel}
     class:bx--header-panel={true}
     class:bx--header-panel--expanded={true}
-    style:overflow-y="auto"
-    style:color-scheme="dark"
     transition:slide|local={{
       ...transition,
       duration: transition === false ? 0 : transition.duration,
@@ -135,26 +144,3 @@
     <slot />
   </div>
 {/if}
-
-<style>
-  :global(.bx--header__action--text) {
-    display: inline-flex;
-    align-items: center;
-    width: auto;
-
-    /** 2px bottom padding aligns icon with `HeaderAction` */
-    padding: 0 1rem 2px 1rem;
-
-    /** `body-short-01` styles */
-    font-size: 0.875rem;
-    line-height: 1.28572;
-    letter-spacing: 0.16px;
-
-    /** Same color as `Header` platformName */
-    color: #f4f4f4;
-  }
-
-  :global(.bx--header__action-text) {
-    margin-left: 0.75rem;
-  }
-</style>

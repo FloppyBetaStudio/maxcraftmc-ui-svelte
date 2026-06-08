@@ -1,22 +1,24 @@
 <script>
   /**
-   * @event {{ text: string; }} click:button--secondary
+   * @template [Icon=any]
+   * @event click:button--secondary
+   * @property {string} text
    */
 
   /** Specify the primary button text */
   export let primaryButtonText = "";
 
   /**
-   * Specify the primary button icon
-   * @type {any}
+   * Specify the primary button icon.
+   * @type {Icon}
    */
-  export let primaryButtonIcon = undefined;
+  export let primaryButtonIcon = /** @type {Icon} */ (undefined);
 
   /** Set to `true` to disable the primary button */
   export let primaryButtonDisabled = false;
 
   /**
-   * Specify a class for the primary button
+   * Specify a class for the primary button.
    * @type {string}
    */
   export let primaryClass = undefined;
@@ -25,14 +27,14 @@
   export let secondaryButtonText = "";
 
   /**
-   * 2-tuple prop to render two secondary buttons for a 3 button modal
-   * supersedes `secondaryButtonText`
-   * @type {[{ text: string; }, { text: string; }]}
+   * 2-tuple prop to render two secondary buttons for a 3 button modal.
+   * Supersedes `secondaryButtonText`.
+   * @type {[] | [{ text: string; }, { text: string; }]}
    */
   export let secondaryButtons = [];
 
   /**
-   * Specify a class for the secondary button
+   * Specify a class for the secondary button.
    * @type {string}
    */
   export let secondaryClass = undefined;
@@ -40,11 +42,11 @@
   /** Set to `true` to use the danger variant */
   export let danger = false;
 
-  import { getContext, createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
   import Button from "../Button/Button.svelte";
 
   const dispatch = createEventDispatcher();
-  const { closeModal, submit } = getContext("ComposedModal");
+  const { closeModal, submit } = getContext("carbon:ComposedModal");
 </script>
 
 <div

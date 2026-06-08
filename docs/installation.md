@@ -30,7 +30,7 @@ unchanged:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.2.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }

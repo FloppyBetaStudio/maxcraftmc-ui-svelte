@@ -1,22 +1,32 @@
 <script>
   /**
+   * @template [Icon=any]
    * @event {ReadonlyArray<File>} change
    */
 
   /**
-   * Specify the accepted file types
+   * Specify the accepted file types.
    * @type {ReadonlyArray<string>}
    */
   export let accept = [];
 
   /**
-   * Obtain a reference to the uploaded files
+   * Obtain a reference to the uploaded files.
    * @type {ReadonlyArray<File>}
+   * @bindable writable
    */
   export let files = [];
 
   /** Set to `true` to allow multiple files */
   export let multiple = false;
+
+  /**
+   * Set to `true` to skip files that match an already-selected file
+   * (by name, size, and lastModified). Only applies when `multiple` is `true`.
+   * For richer behavior (rejection reporting via the `rejected` event),
+   * see `FileUploader`'s `preventDuplicate` prop.
+   */
+  export let preventDuplicate = false;
 
   /** Set to `true` to disable the input */
   export let disabled = false;
@@ -25,34 +35,66 @@
   export let disableLabelChanges = false;
 
   /**
-   * Specify the kind of file uploader button
+   * Specify the kind of file uploader button.
    * @type {import("../Button/Button.svelte").ButtonProps["kind"]}
    */
   export let kind = "primary";
 
   /**
-   * Specify the size of the file uploader button
+   * Specify the size of the file uploader button.
    * @type {import("../Button/Button.svelte").ButtonProps["size"]}
    */
   export let size = "small";
 
-  /** Specify the label text */
+  /**
+   * Specify the label text.
+   * @bindable writable
+   */
   export let labelText = "Add file";
 
-  /** Specify the label role */
-  export let role = "button";
-
-  /** Specify `tabindex` attribute */
-  export let tabindex = "0";
-
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /** Specify a name attribute for the input */
   export let name = "";
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
+
+  /**
+   * Specify the icon to render.
+   * @type {Icon}
+   */
+  export let icon = /** @type {Icon} */ (undefined);
+
+  /**
+   * Specify the ARIA label for the button icon.
+   * @type {string}
+   */
+  export let iconDescription = undefined;
+
+  /**
+   * Set the alignment of the tooltip relative to the icon.
+   * Only applies to icon-only buttons.
+   * @type {"start" | "center" | "end"}
+   */
+  export let tooltipAlignment = "center";
+
+  /**
+   * Set the position of the tooltip relative to the icon.
+   * @type {"top" | "right" | "bottom" | "left"}
+   */
+  export let tooltipPosition = "bottom";
+
+  /**
+   * Set to `true` to hide the tooltip while maintaining accessibility.
+   * Only applies to icon-only buttons.
+   * When `true`, the tooltip is visually hidden but the `iconDescription` remains accessible to screen readers.
+   */
+  export let hideTooltip = false;
 
   import { createEventDispatcher } from "svelte";
 
@@ -60,18 +102,39 @@
 
   let initialLabelText = labelText;
 
-  $: if (ref && files.length === 0) {
-    labelText = initialLabelText;
-    ref.value = "";
+  // Determine if this is icon-only (has icon but no label content)
+  $: hasIconOnly =
+    icon && !$$slots.labelChildren && (!labelText || labelText === "");
+
+  $: iconProps = {
+    "aria-hidden": "true",
+    class: "bx--btn__icon",
+    "aria-label": iconDescription,
+  };
+
+  $: if (ref && files !== undefined) {
+    if (files.length === 0) {
+      labelText = initialLabelText;
+      ref.value = "";
+    }
+
+    // Sync input files with component files array.
+    try {
+      const dt = new DataTransfer();
+      for (const file of files) {
+        dt.items.add(file);
+      }
+      ref.files = dt.files;
+    } catch {
+      // Fail open if DataTransfer API is not supported.
+    }
   }
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<label
-  aria-disabled={disabled}
-  for={id}
-  tabindex={disabled ? "-1" : tabindex}
+<button
+  type="button"
+  on:click={() => ref?.click()}
+  {disabled}
   class:bx--btn={true}
   class:bx--btn--disabled={disabled}
   class:bx--btn--primary={kind === "primary"}
@@ -85,19 +148,45 @@
   class:bx--btn--field={size === "field"}
   class:bx--btn--lg={size === "lg"}
   class:bx--btn--xl={size === "xl"}
+  class:bx--btn--icon-only={hasIconOnly}
+  class:bx--tooltip__trigger={hasIconOnly && !hideTooltip}
+  class:bx--tooltip--a11y={hasIconOnly && !hideTooltip}
+  class:bx--btn--icon-only--top={hasIconOnly &&
+    !hideTooltip &&
+    tooltipPosition === "top"}
+  class:bx--btn--icon-only--right={hasIconOnly &&
+    !hideTooltip &&
+    tooltipPosition === "right"}
+  class:bx--btn--icon-only--bottom={hasIconOnly &&
+    !hideTooltip &&
+    tooltipPosition === "bottom"}
+  class:bx--btn--icon-only--left={hasIconOnly &&
+    !hideTooltip &&
+    tooltipPosition === "left"}
+  class:bx--tooltip--align-start={hasIconOnly &&
+    !hideTooltip &&
+    tooltipAlignment === "start"}
+  class:bx--tooltip--align-center={hasIconOnly &&
+    !hideTooltip &&
+    tooltipAlignment === "center"}
+  class:bx--tooltip--align-end={hasIconOnly &&
+    !hideTooltip &&
+    tooltipAlignment === "end"}
   on:keydown
-  on:keydown={({ key }) => {
-    if (key === " " || key === "Enter") {
-      ref.click();
-    }
-  }}
 >
-  <span {role}>
-    <slot name="labelText">
-      {labelText}
-    </slot>
-  </span>
-</label>
+  {#if hasIconOnly}
+    <span class:bx--assistive-text={true}>{iconDescription}</span>
+  {:else}
+    <slot name="labelChildren"> {labelText} </slot>
+  {/if}
+  {#if icon}
+    <svelte:component
+      this={icon}
+      style={hasIconOnly ? "margin-left: 0" : undefined}
+      {...iconProps}
+    />
+  {/if}
+</button>
 <input
   bind:this={ref}
   type="file"
@@ -107,19 +196,33 @@
   {id}
   {multiple}
   {name}
+  aria-label={hasIconOnly ? iconDescription : labelText}
   class:bx--visually-hidden={true}
   {...$$restProps}
-  on:change|stopPropagation={({ target }) => {
-    files = [...target.files];
+  on:change|stopPropagation={(event) => {
+    if (multiple) {
+      let incoming = [...event.target.files];
+      if (preventDuplicate) {
+        const existingKeys = new Set(
+          files.map((f) => `${f.name}\0${f.size}\0${f.lastModified}`),
+        );
+        incoming = incoming.filter(
+          (f) => !existingKeys.has(`${f.name}\0${f.size}\0${f.lastModified}`),
+        );
+      }
+      files = [...files, ...incoming];
+    } else {
+      files = [...event.target.files];
+    }
 
-    if (files && !disableLabelChanges) {
+    if (files && files.length > 0 && !disableLabelChanges) {
       labelText = files.length > 1 ? `${files.length} files` : files[0].name;
     }
 
     dispatch("change", files);
   }}
   on:click
-  on:click={({ target }) => {
-    target.value = null;
+  on:click={(event) => {
+    event.target.value = "";
   }}
-/>
+>

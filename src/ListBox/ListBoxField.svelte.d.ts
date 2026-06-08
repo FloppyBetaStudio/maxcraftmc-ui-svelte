@@ -1,0 +1,74 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+export type ListBoxFieldTranslationId = "close" | "open";
+
+type $RestProps = SvelteHTMLElements["div"];
+
+type $Props = {
+  /**
+   * Set to `true` to disable the list box field
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Set to `true` to use the read-only variant
+   * @default false
+   */
+  readonly?: boolean;
+
+  /**
+   * Specify the role attribute
+   * @default "combobox"
+   */
+  role?: string;
+
+  /**
+   * Specify the tabindex
+   * @default "-1"
+   */
+  tabindex?: number | string | undefined;
+
+  /**
+   * Override the default translation ids.
+   */
+  translateWithId?: (id: ListBoxFieldTranslationId) => string;
+
+  /**
+   * Set an id for the top-level element
+   * @default `ccs-${Math.random().toString(36)}`
+   */
+  id?: string;
+
+  /**
+   * Obtain a reference to the top-level HTML element.
+   * @default null
+   */
+  ref?: null | HTMLDivElement;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type ListBoxFieldProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class ListBoxField extends SvelteComponentTyped<
+  ListBoxFieldProps,
+  {
+    blur: WindowEventMap["blur"];
+    click: WindowEventMap["click"];
+    focus: WindowEventMap["focus"];
+    keydown: WindowEventMap["keydown"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  { default: Record<string, never> }
+> {
+  /**
+   * Default translation ids
+   */
+  translationIds: { close: "close"; open: "open" };
+}

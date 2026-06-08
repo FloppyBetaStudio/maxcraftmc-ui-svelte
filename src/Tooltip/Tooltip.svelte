@@ -1,39 +1,41 @@
 <script>
   /**
+   * @template [Icon=any]
    * @event {null} open
    * @event {null} close
    */
 
   /**
-   * Set the alignment of the tooltip relative to the icon
+   * Set the alignment of the tooltip relative to the icon.
    * @type {"start" | "center" | "end"}
    */
   export let align = "center";
 
   /**
-   * Set the direction of the tooltip relative to the button
+   * Set the direction of the tooltip relative to the button.
    * @type {"top" | "right" | "bottom" | "left"}
    */
   export let direction = "bottom";
 
   /**
-   * Set to `true` to open the tooltip
+   * Set to `true` to open the tooltip.
    * @type {boolean}
+   * @bindable writable
    */
   export let open = false;
 
   /**
-   * Set to `true` to hide the tooltip icon
+   * Set to `true` to hide the tooltip icon.
    * @type {boolean}
    */
   export let hideIcon = false;
 
   /**
    * Specify the icon to render for the tooltip button.
-   * Default to `<Information />`
-   * @type {any}
+   * Defaults to `<Information />`.
+   * @type {Icon}
    */
-  export let icon = Information;
+  export let icon = /** @type {Icon} */ (Information);
 
   /** Specify the ARIA label for the tooltip button */
   export let iconDescription = "";
@@ -41,75 +43,145 @@
   /** Specify the icon name attribute */
   export let iconName = "";
 
-  /** Set the button tabindex */
+  /**
+   * Set the button tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /**
-   * Set an id for the tooltip
+   * Set an id for the tooltip.
    * @type {string}
    */
-  export let tooltipId = "ccs-" + Math.random().toString(36);
+  export let tooltipId = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Set an id for the tooltip button
+   * Set an id for the tooltip button.
    * @type {string}
    */
-  export let triggerId = "ccs-" + Math.random().toString(36);
+  export let triggerId = `ccs-${Math.random().toString(36)}`;
 
   /** Set the tooltip button text */
   export let triggerText = "";
 
-  /** Obtain a reference to the trigger text HTML element */
+  /**
+   * Specify the duration in milliseconds to delay before displaying the tooltip.
+   * @type {number}
+   */
+  export let enterDelayMs = 100;
+
+  /**
+   * Specify the duration in milliseconds to delay before hiding the tooltip.
+   * @type {number}
+   */
+  export let leaveDelayMs = 300;
+
+  /**
+   * Obtain a reference to the trigger text HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  /** Obtain a reference to the tooltip HTML element */
+  /**
+   * Obtain a reference to the tooltip HTML element.
+   * @bindable readonly
+   */
   export let refTooltip = null;
 
-  /** Obtain a reference to the icon HTML element */
+  /**
+   * Obtain a reference to the icon HTML element.
+   * @bindable readonly
+   */
   export let refIcon = null;
 
-  import { createEventDispatcher, afterUpdate, setContext } from "svelte";
+  /**
+   * Set to `true` to render the tooltip in a portal,
+   * preventing it from being clipped by `overflow: hidden` containers.
+   * By default, the tooltip is portalled when inside a `Modal`.
+   * @type {boolean | undefined}
+   */
+  export let portalTooltip = undefined;
+
+  import {
+    afterUpdate,
+    createEventDispatcher,
+    getContext,
+    onMount,
+    setContext,
+  } from "svelte";
   import { writable } from "svelte/store";
   import Information from "../icons/Information.svelte";
+  import FloatingPortal from "../Portal/FloatingPortal.svelte";
+
+  const insideModal = getContext("carbon:Modal");
 
   const dispatch = createEventDispatcher();
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
   const tooltipOpen = writable(open);
 
-  setContext("Tooltip", { tooltipOpen });
+  let prevOpen = undefined;
+  let openTimeout;
+  let focusByMouse = false;
 
-  function onKeydown(e) {
-    if (e.key === "Escape" || e.key === "Tab") {
-      e.stopPropagation();
-      if (e.key === "Escape") refIcon?.focus();
+  $: effectivePortalTooltip =
+    portalTooltip === undefined ? !!insideModal : portalTooltip;
+
+  setContext("carbon:Tooltip", { tooltipOpen });
+
+  function setOpenDelayed(value, delay = 0) {
+    clearTimeout(openTimeout);
+    if (delay > 0) {
+      openTimeout = setTimeout(() => {
+        open = value;
+      }, delay);
+    } else {
+      open = value;
+    }
+  }
+
+  function onMouseEnter() {
+    setOpenDelayed(true, enterDelayMs);
+  }
+
+  function onMouseLeave() {
+    setOpenDelayed(false, leaveDelayMs);
+  }
+
+  function onKeydown(event) {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      refIcon?.focus();
       open = false;
-    } else if (e.key === " " || e.key === "Enter") {
-      e.stopPropagation();
-      e.preventDefault();
+    }
+  }
+
+  function onBlur(event) {
+    if (refTooltip && !refTooltip.contains(event.relatedTarget)) {
+      open = false;
+    }
+    focusByMouse = false;
+  }
+
+  function onFocus() {
+    if (!focusByMouse) {
       open = true;
     }
   }
 
-  function onBlur({ relatedTarget }) {
-    if (refTooltip && !refTooltip.contains(relatedTarget)) {
-      open = false;
-    }
+  function onMouseDown() {
+    focusByMouse = true;
   }
 
-  function onFocus() {
-    open = true;
-  }
-
-  function onMousedown() {
-    // determine the desired state before the focus event triggers.
-    const shouldClose = open;
-    // ensure changes are scheduled at the end, i.e. after the possible focus event.
-    setTimeout(() => {
-      open = shouldClose ? false : true;
-    });
-  }
+  onMount(() => {
+    return () => {
+      clearTimeout(openTimeout);
+    };
+  });
 
   afterUpdate(() => {
-    if (open) {
+    if (open && !effectivePortalTooltip) {
       const button = ref.getBoundingClientRect();
       const tooltip = refTooltip.getBoundingClientRect();
 
@@ -157,13 +229,18 @@
           break;
       }
 
-      refTooltip.style.left = offsetX + "px";
-      refTooltip.style.marginTop = offsetY + "px";
+      refTooltip.style.left = `${offsetX}px`;
+      refTooltip.style.marginTop = `${offsetY}px`;
     }
   });
 
   $: tooltipOpen.set(open);
-  $: dispatch(open ? "open" : "close");
+  $: {
+    if (prevOpen !== undefined) {
+      dispatch(open ? "open" : "close");
+    }
+    prevOpen = open;
+  }
   $: buttonProps = {
     role: "button",
     "aria-haspopup": "true",
@@ -178,31 +255,12 @@
   };
 </script>
 
-<svelte:window
-  on:mousedown={({ target }) => {
-    if (open) {
-      if (target.contains(refTooltip)) {
-        if (refIcon) {
-          refIcon.focus();
-        } else if (ref) {
-          ref.focus();
-        }
-      }
-    }
-  }}
-  on:click|capture={({ target }) => {
-    if (open && !ref.contains(target) && !refTooltip.contains(target)) {
-      setTimeout(() => {
-        open = false;
-      });
-    }
-  }}
-/>
-
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   style:position="relative"
   style:z-index={open ? 1 : undefined}
   {...$$restProps}
+  on:mouseleave={onMouseLeave}
 >
   {#if !hideIcon}
     <div bind:this={ref} id={triggerId} class:bx--tooltip__label={true}>
@@ -212,8 +270,10 @@
         bind:this={refIcon}
         {...buttonProps}
         aria-describedby={tooltipId}
-        on:mousedown={onMousedown}
+        on:mouseenter={onMouseEnter}
+        on:mousedown={onMouseDown}
         on:focus={onFocus}
+        on:blur={onBlur}
         on:keydown={onKeydown}
       >
         <slot name="icon">
@@ -227,7 +287,8 @@
       bind:this={ref}
       {...buttonProps}
       aria-describedby={tooltipId}
-      on:mousedown={onMousedown}
+      on:mouseenter={onMouseEnter}
+      on:mousedown={onMouseDown}
       on:focus={onFocus}
       on:blur={onBlur}
       on:keydown={onKeydown}
@@ -235,7 +296,7 @@
       <slot name="triggerText">{triggerText}</slot>
     </div>
   {/if}
-  {#if open}
+  {#if open && !effectivePortalTooltip}
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       bind:this={refTooltip}
@@ -250,6 +311,7 @@
       class:bx--tooltip--align-center={align === "center"}
       class:bx--tooltip--align-start={align === "start"}
       class:bx--tooltip--align-end={align === "end"}
+      on:mouseenter={onMouseEnter}
       on:keydown={onKeydown}
     >
       <span class:bx--tooltip__caret={true}></span>
@@ -267,3 +329,52 @@
     </div>
   {/if}
 </div>
+
+{#if effectivePortalTooltip}
+  <FloatingPortal
+    anchor={hideIcon ? ref : refIcon}
+    {direction}
+    {open}
+    gapTop={8}
+    gapBottom={10}
+    horizontalGapLeft={16}
+    horizontalGapRight={6}
+    verticalAlignOffsetLeft={-10}
+    verticalAlignOffsetRight={4}
+    bind:ref={refTooltip}
+    let:direction={actualDirection}
+  >
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <div
+        id={tooltipId}
+        data-floating-menu-direction={actualDirection}
+        class:bx--tooltip={true}
+        class:bx--tooltip--shown={open}
+        class:bx--tooltip--top={actualDirection === "top"}
+        class:bx--tooltip--right={actualDirection === "right"}
+        class:bx--tooltip--bottom={actualDirection === "bottom"}
+        class:bx--tooltip--left={actualDirection === "left"}
+        class:bx--tooltip--align-center={align === "center"}
+        class:bx--tooltip--align-start={align === "start"}
+        class:bx--tooltip--align-end={align === "end"}
+        style="position: relative; transform: none; display: block; left: auto; margin-top: 0;"
+        on:mouseenter={onMouseEnter}
+        on:keydown={onKeydown}
+      >
+        <span class:bx--tooltip__caret={true}></span>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <div
+          on:click|stopPropagation
+          on:mousedown|stopPropagation
+          class:bx--tooltip__content={true}
+          tabindex="-1"
+          role="dialog"
+        >
+          <slot />
+        </div>
+      </div>
+    </div>
+  </FloatingPortal>
+{/if}

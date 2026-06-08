@@ -1,76 +1,84 @@
 <script>
   /**
+   * @template [Id=any]
    * @event {null} cancel
    */
 
   /**
-   * Override the total items selected text
+   * Override the total items selected text.
    * @type {(totalSelected: number) => string}
    */
   export let formatTotalSelected = (totalSelected) =>
     `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected`;
 
   /**
-   * Use a boolean to show or hide the toolbar
+   * Use a boolean to show or hide the toolbar.
    * @type {undefined | boolean}
    */
   export let active = undefined;
 
-  import {
-    onMount,
-    getContext,
-    createEventDispatcher,
-    afterUpdate,
-  } from "svelte";
+  /**
+   * Specify the selected IDs for standalone usage.
+   * This is unnecessary if using this component with `DataTable`.
+   * @type {ReadonlyArray<Id>}
+   */
+  export let selectedIds = [];
+
+  import { createEventDispatcher, getContext, onMount } from "svelte";
 
   import Button from "../Button/Button.svelte";
 
   let batchSelectedIds = [];
-  let prevActive;
 
   const dispatch = createEventDispatcher();
 
-  const ctx = getContext("DataTable");
+  const ctx = getContext("carbon:DataTable");
 
   function cancel() {
     const shouldContinue = dispatch("cancel", null, { cancelable: true });
 
     if (shouldContinue) {
-      ctx.resetSelectedRowIds();
+      ctx?.resetSelectedRowIds?.();
     }
   }
 
-  $: showActions = batchSelectedIds.length > 0 || active;
-  $: {
-    if (prevActive !== active && active === false) {
-      showActions = false;
-    }
+  let unsubscribe;
 
-    prevActive = active;
+  // Subscribe to DataTable context if available, otherwise use selectedIds prop
+  if (ctx?.batchSelectedIds) {
+    unsubscribe = ctx.batchSelectedIds.subscribe((value) => {
+      batchSelectedIds = value;
+    });
   }
 
-  const unsubscribe = ctx.batchSelectedIds.subscribe((value) => {
-    batchSelectedIds = value;
-  });
+  // For standalone usage, watch the selectedIds prop
+  $: if (!ctx?.batchSelectedIds) {
+    batchSelectedIds = selectedIds;
+  }
+
+  $: showActions = active ?? batchSelectedIds.length > 0;
+  $: inertProps = showActions ? {} : { inert: true };
 
   let overflowVisible = false;
 
-  const ctxToolbar = getContext("Toolbar");
-  const unsubscribeOverflow = ctxToolbar.overflowVisible.subscribe((value) => {
-    overflowVisible = value;
-  });
+  const ctxToolbar = getContext("carbon:Toolbar");
+  let unsubscribeOverflow;
+
+  if (ctxToolbar?.overflowVisible) {
+    unsubscribeOverflow = ctxToolbar.overflowVisible.subscribe((value) => {
+      overflowVisible = value;
+    });
+  }
+
+  $: if (ctxToolbar?.batchActionsActive) {
+    ctxToolbar.batchActionsActive.set(showActions);
+  }
 
   onMount(() => {
     return () => {
-      unsubscribe();
-      unsubscribeOverflow();
+      unsubscribe?.();
+      unsubscribeOverflow?.();
     };
-  });
-
-  afterUpdate(() => {
-    if (active === false && showActions) {
-      active = true;
-    }
   });
 </script>
 
@@ -78,6 +86,7 @@
   <div
     class:bx--batch-actions={true}
     class:bx--batch-actions--active={showActions}
+    {...inertProps}
     {...$$restProps}
   >
     <div class:bx--batch-summary={true}>

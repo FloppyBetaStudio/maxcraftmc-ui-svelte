@@ -1,0 +1,47 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["div"];
+
+type $Props = {
+  /**
+   * Set the loading status.
+   * @default "active"
+   */
+  status?: "active" | "inactive" | "finished" | "error";
+
+  /**
+   * Set the loading description.
+   * @default undefined
+   */
+  description?: string;
+
+  /**
+   * Specify a description for the loading icon.
+   * Defaults to the `status` prop for the "error" and "finished" states.
+   * @default undefined
+   */
+  iconDescription?: string;
+
+  /**
+   * Specify the timeout delay (ms) after `status` is set to "success"
+   * @default 1500
+   */
+  successDelay?: number;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type InlineLoadingProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class InlineLoading extends SvelteComponentTyped<
+  InlineLoadingProps,
+  {
+    click: WindowEventMap["click"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+    success: CustomEvent<null>;
+  },
+  Record<string, never>
+> {}

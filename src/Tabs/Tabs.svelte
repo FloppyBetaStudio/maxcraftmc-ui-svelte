@@ -3,11 +3,14 @@
    * @event {number} change
    */
 
-  /** Specify the selected tab index */
+  /**
+   * Specify the selected tab index.
+   * @bindable writable
+   */
   export let selected = 0;
 
   /**
-   * Specify the type of tabs
+   * Specify the type of tabs.
    * @type {"default" | "container"}
    */
   export let type = "default";
@@ -15,8 +18,11 @@
   /** Set to `true` for tabs to have an auto-width */
   export let autoWidth = false;
 
+  /** Set to `true` for tabs to span the full width of the container */
+  export let fullWidth = false;
+
   /**
-   * Specify the ARIA label for the chevron icon
+   * Specify the ARIA label for the chevron icon.
    * @type {string}
    */
   export let iconDescription = "Show menu options";
@@ -24,75 +30,160 @@
   /** Specify the tab trigger href attribute */
   export let triggerHref = "#";
 
-  import { createEventDispatcher, afterUpdate, setContext, tick } from "svelte";
-  import { writable, derived } from "svelte/store";
+  import { afterUpdate, createEventDispatcher, setContext, tick } from "svelte";
+  import { derived, writable } from "svelte/store";
   import ChevronDown from "../icons/ChevronDown.svelte";
+  import { keyBy } from "../utils/keyBy.js";
+  import { nextEnabledIndex } from "../utils/moveIndex.js";
+  import { syncDomOrder } from "../utils/syncDomOrder.js";
 
   const dispatch = createEventDispatcher();
 
+  /**
+   * @type {import("svelte/store").Writable<ReadonlyArray<{ id: string; label: string; disabled: boolean; hasSecondaryLabel: boolean; index: number }>>}
+   */
   const tabs = writable([]);
-  const tabsById = derived(tabs, (_) =>
-    _.reduce((a, c) => ({ ...a, [c.id]: c }), {}),
-  );
+  const tabsById = derived(tabs, (_) => keyBy(_));
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
   const useAutoWidth = writable(autoWidth);
+  /**
+   * @type {import("svelte/store").Writable<boolean>}
+   */
+  const useFullWidth = writable(fullWidth);
+  /**
+   * @type {import("svelte/store").Writable<string | undefined>}
+   */
   const selectedTab = writable(undefined);
+  /**
+   * @type {import("svelte/store").Writable<ReadonlyArray<{ id: string; index: number }>>}
+   */
   const content = writable([]);
-  const contentById = derived(content, (_) =>
-    _.reduce((a, c) => ({ ...a, [c.id]: c }), {}),
-  );
+  /**
+   * @type {import("svelte/store").Readable<Record<string, { id: string; index: number }>>}
+   */
+  const contentById = derived(content, (_) => keyBy(_));
+  /**
+   * @type {import("svelte/store").Writable<string | undefined>}
+   */
   const selectedContent = writable(undefined);
 
   let refTabList = null;
+  let refRoot = null;
 
-  setContext("Tabs", {
+  // Flag to trigger DOM reordering only when tabs change.
+  // This is necessary to avoid infinite loops in Svelte 5.
+  let needsDomSync = false;
+
+  const hasSecondaryLabel = derived(
+    tabs,
+    (_) => type === "container" && _.some((tab) => tab.hasSecondaryLabel),
+  );
+
+  /**
+   * @type {(data: { id: string; label: string; disabled: boolean; hasSecondaryLabel: boolean }) => void}
+   */
+  const add = (data) => {
+    needsDomSync = true;
+    tabs.update((_) => [..._, { ...data, index: _.length }]);
+  };
+
+  /**
+   * @type {(id: string) => void}
+   */
+  const remove = (id) => {
+    needsDomSync = true;
+    tabs.update((_) => _.filter((tab) => tab.id !== id));
+  };
+
+  /**
+   * @type {(data: { id: string }) => void}
+   */
+  const addContent = (data) => {
+    needsDomSync = true;
+    content.update((_) => [..._, { ...data, index: _.length }]);
+  };
+
+  /**
+   * @type {(id: string) => void}
+   */
+  const removeContent = (id) => {
+    needsDomSync = true;
+    content.update((_) => _.filter((item) => item.id !== id));
+  };
+
+  /**
+   * @type {(id: string) => void}
+   */
+  const update = (id) => {
+    currentIndex = $tabsById[id].index;
+  };
+
+  /**
+   * @type {(direction: number) => Promise<void>}
+   */
+  const change = async (direction) => {
+    const nextIndex = nextEnabledIndex({
+      items: $tabs,
+      index: currentIndex,
+      step: direction,
+    });
+
+    if (nextIndex === currentIndex) return;
+
+    currentIndex = nextIndex;
+
+    await tick();
+    const activeTab =
+      refTabList?.querySelectorAll("[role='tab']")[currentIndex];
+    activeTab?.focus();
+  };
+
+  setContext("carbon:Tabs", {
     tabs,
     contentById,
     selectedTab,
     selectedContent,
     useAutoWidth,
-    add: (data) => {
-      tabs.update((_) => [..._, { ...data, index: _.length }]);
-    },
-    addContent: (data) => {
-      content.update((_) => [..._, { ...data, index: _.length }]);
-    },
-    update: (id) => {
-      currentIndex = $tabsById[id].index;
-    },
-    change: async (direction) => {
-      let index = currentIndex + direction;
-
-      if (index < 0) {
-        index = $tabs.length - 1;
-      } else if (index >= $tabs.length) {
-        index = 0;
-      }
-
-      let disabled = $tabs[index].disabled;
-
-      while (disabled) {
-        index = index + direction;
-
-        if (index < 0) {
-          index = $tabs.length - 1;
-        } else if (index >= $tabs.length) {
-          index = 0;
-        }
-
-        disabled = $tabs[index].disabled;
-      }
-
-      currentIndex = index;
-
-      await tick();
-      const activeTab =
-        refTabList?.querySelectorAll("[role='tab']")[currentIndex];
-      activeTab?.focus();
-    },
+    useFullWidth,
+    hasSecondaryLabel,
+    add,
+    remove,
+    addContent,
+    removeContent,
+    update,
+    change,
   });
 
   afterUpdate(() => {
-    selected = currentIndex;
+    // Sync DOM order with stores only when tabs are added/removed.
+    // This avoids infinite loops in Svelte 5 by not running on every update.
+    if (needsDomSync && refTabList) {
+      needsDomSync = false;
+
+      tabs.update((currentTabs) =>
+        syncDomOrder({
+          root: refTabList,
+          selector: "[role='tab']",
+          items: currentTabs,
+        }),
+      );
+
+      if (refRoot?.parentElement) {
+        content.update((currentContent) =>
+          syncDomOrder({
+            root: refRoot.parentElement,
+            selector: "[role='tabpanel']",
+            items: currentContent,
+          }),
+        );
+      }
+    }
+
+    if (selected !== currentIndex) {
+      selected = currentIndex;
+    }
 
     if (prevIndex > -1 && prevIndex !== currentIndex) {
       dispatch("change", currentIndex);
@@ -121,19 +212,23 @@
     dropdownHidden = true;
   }
   $: useAutoWidth.set(autoWidth);
+  $: useFullWidth.set(fullWidth);
 </script>
 
 <div
+  bind:this={refRoot}
   role="navigation"
   class:bx--tabs={true}
   class:bx--tabs--container={type === "container"}
+  class:bx--tabs--tall={$hasSecondaryLabel}
+  class:bx--tabs--full-width={fullWidth}
   {...$$restProps}
 >
   <div
     role="listbox"
     tabindex="0"
     class:bx--tabs-trigger={true}
-    aria-label={$$props["aria-label"] || "listbox"}
+    aria-label={$$props["aria-label"] ?? "listbox"}
     on:click={() => {
       dropdownHidden = !dropdownHidden;
     }}
@@ -151,7 +246,9 @@
         dropdownHidden = !dropdownHidden;
       }}
     >
-      {#if currentTab}{currentTab.label}{/if}
+      {#if currentTab}
+        {currentTab.label}
+      {/if}
     </a>
     <ChevronDown aria-hidden="true" title={iconDescription} />
   </div>

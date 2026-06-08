@@ -1,6 +1,14 @@
 <script>
   /**
-   * Specify the kind of option
+   * @event {Event} click
+   */
+
+  /**
+   * @template [Icon=any]
+   */
+
+  /**
+   * Specify the kind of option.
    * @type {"default" | "danger"}
    */
   export let kind = "default";
@@ -8,62 +16,88 @@
   /** Set to `true` to enable the disabled state */
   export let disabled = false;
 
-  /** Set to `true` to indent the label */
+  /**
+   * Set to `true` to indent the label.
+   * @bindable writable
+   */
   export let indented = false;
 
   /**
-   * Specify the icon to render
-   * Icon is rendered to the left of the label text
-   * @type {any}
+   * Specify the icon to render.
+   * Icon is rendered to the left of the label text.
+   * @type {Icon}
+   * @bindable writable
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
   /**
    * Specify the label text.
-   * Alternatively, use the "labelText" slot (e.g., `<span slot="labelText">...</span>`)
+   * Alternatively, use the "labelChildren" slot.
+   * @example
+   * ```svelte
+   * <ContextMenuOption>
+   *   <span slot="labelChildren">Custom Label</span>
+   * </ContextMenuOption>
+   * ```
    */
   export let labelText = "";
 
-  /** Set to `true` to use the selected variant */
+  /**
+   * Set to `true` to use the selected variant.
+   * @bindable writable
+   */
   export let selected = false;
 
   /**
-   * Set to `true` to enable the selectable variant
-   * Automatically set to `true` if `selected` is `true`
+   * Set to `true` to enable the selectable variant.
+   * Automatically set to `true` if `selected` is `true`.
+   * @bindable writable
    */
   export let selectable = false;
 
   /**
    * Specify the shortcut text.
-   * Alternatively, use the "shortcutText" slot (e.g., `<span slot="shortcutText">...</span>`)
+   * Alternatively, use the "shortcutText" slot.
+   * @example
+   * ```svelte
+   * <ContextMenuOption>
+   *   <span slot="shortcutText">Ctrl+K</span>
+   * </ContextMenuOption>
+   * ```
    */
   export let shortcutText = "";
 
   /**
-   * Specify the id
-   * It's recommended to provide an id as a value to bind to within a selectable/radio menu group
+   * Specify the id.
+   * It's recommended to provide an id as a value to bind to within a selectable/radio menu group.
    */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the list item HTML element */
+  /**
+   * Obtain a reference to the list item HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { onMount, getContext, createEventDispatcher, tick } from "svelte";
-  import ContextMenu from "./ContextMenu.svelte";
-  import Checkmark from "../icons/Checkmark.svelte";
+  import { createEventDispatcher, getContext, onMount, tick } from "svelte";
   import CaretRight from "../icons/CaretRight.svelte";
+  import Checkmark from "../icons/Checkmark.svelte";
+  import { clampIndex } from "../utils/clampIndex.js";
+  import ContextMenu from "./ContextMenu.svelte";
 
   const dispatch = createEventDispatcher();
-  const ctx = getContext("ContextMenu");
-  const ctxGroup = getContext("ContextMenuGroup");
-  const ctxRadioGroup = getContext("ContextMenuRadioGroup");
+  const ctx = getContext("carbon:ContextMenu");
+  const ctxGroup = getContext("carbon:ContextMenuGroup");
+  const ctxRadioGroup = getContext("carbon:ContextMenuRadioGroup");
 
   // "moderate-01" duration (ms) from Carbon motion recommended for small expansion, short distance movements
   const moderate01 = 150;
+  const closeDelay = moderate01;
 
   let unsubCurrentIds = undefined;
   let unsubCurrentId = undefined;
   let timeoutHover = undefined;
+  let timeoutClose = undefined;
   let rootMenuPosition = [0, 0];
   let focusIndex = 0;
   let options = [];
@@ -71,6 +105,9 @@
   let submenuOpen = false;
   let submenuPosition = [0, 0];
   let menuOffsetX = 0;
+  let mousePosition = { x: 0, y: 0 };
+  /** @type {HTMLUListElement | null} */
+  let submenuRef = null;
 
   const unsubPosition = ctx.position.subscribe((position) => {
     rootMenuPosition = position;
@@ -80,24 +117,108 @@
     menuOffsetX = _menuOffsetX;
   });
 
-  function handleClick(opts = {}) {
-    if (disabled) return ctx.close();
-    if (subOptions) return;
+  function isPointInTriangle(px, py, x1, y1, x2, y2, x3, y3) {
+    const denominator = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+    const a = ((y2 - y3) * (px - x3) + (x3 - x2) * (py - y3)) / denominator;
+    const b = ((y3 - y1) * (px - x3) + (x1 - x3) * (py - y3)) / denominator;
+    const c = 1 - a - b;
 
-    if (!!ctxGroup) {
-      ctxGroup.toggleOption({ id });
-    } else if (!!ctxRadioGroup) {
-      if (opts.fromKeyboard) {
-        ctxRadioGroup.setOption({ id: opts.id });
-      } else {
-        ctxRadioGroup.setOption({ id });
-      }
+    return a >= 0 && a <= 1 && b >= 0 && b <= 1 && c >= 0 && c <= 1;
+  }
+
+  // Utility function to check if mouse is in the
+  // safe triangle when transferring to the submenu.
+  function isInSafeTriangle(mouseX, mouseY) {
+    if (!submenuOpen || !ref || !submenuRef) return false;
+
+    const parentRect = ref.getBoundingClientRect();
+    const submenuRect = submenuRef.getBoundingClientRect();
+
+    // Magic number to make the triangle slightly larger
+    const buffer = 12;
+    const isSubmenuOnRight = submenuRect.left >= parentRect.right;
+
+    let trianglePoints;
+    if (isSubmenuOnRight) {
+      trianglePoints = {
+        x1: parentRect.right,
+        y1: parentRect.top - buffer,
+        x2: parentRect.right,
+        y2: parentRect.bottom + buffer,
+        x3: submenuRect.left,
+        y3: submenuRect.top + submenuRect.height / 2,
+      };
     } else {
-      selected = !selected;
+      trianglePoints = {
+        x1: parentRect.left,
+        y1: parentRect.top - buffer,
+        x2: parentRect.left,
+        y2: parentRect.bottom + buffer,
+        x3: submenuRect.right,
+        y3: submenuRect.top + submenuRect.height / 2,
+      };
     }
 
-    ctx.close();
-    dispatch("click");
+    const inTopTriangle = isPointInTriangle(
+      mouseX,
+      mouseY,
+      trianglePoints.x1,
+      trianglePoints.y1,
+      isSubmenuOnRight ? trianglePoints.x3 : trianglePoints.x2,
+      submenuRect.top,
+      trianglePoints.x3,
+      trianglePoints.y3,
+    );
+
+    const inBottomTriangle = isPointInTriangle(
+      mouseX,
+      mouseY,
+      trianglePoints.x2,
+      trianglePoints.y2,
+      trianglePoints.x3,
+      trianglePoints.y3,
+      isSubmenuOnRight ? trianglePoints.x3 : trianglePoints.x1,
+      submenuRect.bottom,
+    );
+
+    return inTopTriangle || inBottomTriangle;
+  }
+
+  function handleClick(event, opts = {}) {
+    if (disabled) return;
+    if (subOptions) return;
+
+    const shouldContinue = dispatch("click", event, { cancelable: true });
+
+    if (shouldContinue) {
+      if (ctxGroup) {
+        ctxGroup.toggleOption({ id });
+      } else if (ctxRadioGroup) {
+        if (opts.fromKeyboard) {
+          ctxRadioGroup.setOption({ id: opts.id });
+        } else {
+          ctxRadioGroup.setOption({ id });
+        }
+      } else {
+        selected = !selected;
+      }
+
+      ctx.close();
+    }
+  }
+
+  function handleGlobalMouseMove(event) {
+    if (subOptions && submenuOpen) {
+      mousePosition = { x: event.clientX, y: event.clientY };
+
+      if (
+        isInSafeTriangle(event.clientX, event.clientY) &&
+        typeof timeoutClose === "number"
+      ) {
+        clearTimeout(timeoutClose);
+        timeoutClose = undefined;
+      }
+    }
   }
 
   onMount(() => {
@@ -121,6 +242,7 @@
       if (unsubCurrentIds) unsubCurrentIds();
       if (unsubCurrentId) unsubCurrentId();
       if (typeof timeoutHover === "number") clearTimeout(timeoutHover);
+      if (typeof timeoutClose === "number") clearTimeout(timeoutClose);
     };
   });
 
@@ -132,16 +254,31 @@
     const { width, y } = ref.getBoundingClientRect();
     let x = rootMenuPosition[0] + width;
 
-    if (window.innerWidth - menuOffsetX < width) {
-      x = rootMenuPosition[0] - width;
+    const submenuWidth = submenuRef?.getBoundingClientRect().width ?? width;
+
+    if (x + submenuWidth > window.innerWidth) {
+      x = rootMenuPosition[0] - submenuWidth;
+
+      // On narrow screens, position submenu at edge to avoid clipping.
+      if (x < 0) {
+        x = Math.max(0, window.innerWidth - submenuWidth);
+      }
     }
 
     submenuPosition = [x, y];
   }
   $: {
+    if (icon) {
+      indented = true;
+    }
+
+    let nextRole = "menuitem";
+    if (isSelectable) nextRole = "menuitemcheckbox";
+    if (isRadio) nextRole = "menuitemradio";
+    role = nextRole;
+
     if (isSelectable) {
       indented = true;
-      role = "menuitemcheckbox";
 
       if (selected) {
         if (ctxGroup) ctxGroup.addOption({ id });
@@ -153,7 +290,6 @@
 
     if (isRadio) {
       indented = true;
-      role = "menuitemradio";
       ctxRadioGroup.addOption({ id });
 
       if (selected) {
@@ -166,15 +302,17 @@
   }
 </script>
 
+<svelte:window on:mousemove|passive={handleGlobalMouseMove} />
+
 <li
   bind:this={ref}
   {role}
   tabindex="-1"
-  aria-disabled={!subOptions && disabled}
+  aria-disabled={disabled}
   aria-haspopup={subOptions ? true : undefined}
   aria-expanded={subOptions ? submenuOpen : undefined}
   class:bx--menu-option={true}
-  class:bx--menu-option--disabled={true}
+  class:bx--menu-option--disabled={disabled}
   class:bx--menu-option--active={subOptions && submenuOpen}
   class:bx--menu-option--danger={!subOptions && kind === "danger"}
   {indented}
@@ -185,11 +323,12 @@
   data-id={id}
   {...$$restProps}
   on:keydown
-  on:keydown={async ({ key, target }) => {
+  on:keydown={async (event) => {
     if (
       subOptions &&
-      (key === "ArrowRight" || key === " " || key === "Enter")
+      (event.key === "ArrowRight" || event.key === " " || event.key === "Enter")
     ) {
+      if (disabled) return;
       submenuOpen = true;
       await tick();
       options = [...ref.querySelectorAll("li[tabindex]")];
@@ -198,45 +337,71 @@
     }
 
     if (submenuOpen) {
-      if (key === "ArrowLeft") {
+      if (event.key === "ArrowLeft") {
         submenuOpen = false;
         focusIndex = 0;
         return;
       }
 
-      if (key === "ArrowDown") {
-        if (focusIndex < options.length - 1) focusIndex++;
-      } else if (key === "ArrowUp") {
-        if (focusIndex === -1) {
-          focusIndex = options.length - 1;
-        } else {
-          if (focusIndex > 0) focusIndex--;
-        }
+      if (event.key === "ArrowDown") {
+        focusIndex = clampIndex(focusIndex, 1, options.length);
+      } else if (event.key === "ArrowUp") {
+        focusIndex = clampIndex(focusIndex, -1, options.length);
+      } else if (event.key === "Home") {
+        if (options.length > 0) focusIndex = 0;
+      } else if (event.key === "End" && options.length > 0) {
+        focusIndex = options.length - 1;
       }
 
       if (options[focusIndex]) options[focusIndex].focus();
     }
 
-    if (key === " " || key === "Enter") {
-      handleClick({ fromKeyboard: true, id: target.getAttribute("data-id") });
+    if (event.key === " " || event.key === "Enter") {
+      handleClick(event, {
+        fromKeyboard: true,
+        id: event.target.getAttribute("data-id"),
+      });
     }
   }}
   on:mouseenter
   on:mouseenter={() => {
-    if (subOptions) {
+    if (subOptions && !disabled) {
+      if (typeof timeoutClose === "number") {
+        clearTimeout(timeoutClose);
+        timeoutClose = undefined;
+      }
+
       timeoutHover = setTimeout(() => {
         submenuOpen = true;
       }, moderate01);
     }
   }}
-  on:mouseleave
-  on:mouseleave={(e) => {
-    if (subOptions) {
-      if (typeof timeoutHover === "number") clearTimeout(timeoutHover);
-      submenuOpen = false;
+  on:mousemove={(event) => {
+    if (subOptions && submenuOpen) {
+      mousePosition = { x: event.clientX, y: event.clientY };
     }
   }}
-  on:click={handleClick}
+  on:mouseleave
+  on:mouseleave={() => {
+    if (subOptions) {
+      if (typeof timeoutHover === "number") clearTimeout(timeoutHover);
+
+      timeoutClose = setTimeout(() => {
+        if (!isInSafeTriangle(mousePosition.x, mousePosition.y)) {
+          submenuOpen = false;
+        }
+      }, closeDelay);
+    }
+  }}
+  on:click={(event) => {
+    if (subOptions) {
+      event.stopPropagation();
+      if (disabled) return;
+      submenuOpen = true;
+      return;
+    }
+    handleClick(event);
+  }}
 >
   {#if subOptions}
     <div
@@ -245,18 +410,17 @@
     >
       {#if indented}
         <div class:bx--menu-option__icon={true}>
-          <slot name="icon">
-            <svelte:component this={icon} />
-          </slot>
+          <slot name="icon"> <svelte:component this={icon} /> </slot>
         </div>
       {/if}
       <span class:bx--menu-option__label={true} title={labelText}>
-        <slot name="labelText">{labelText}</slot>
+        <slot name="labelChildren">{labelText}</slot>
       </span>
       <div class:bx--menu-option__info={true}><CaretRight /></div>
     </div>
 
     <ContextMenu
+      bind:ref={submenuRef}
       open={submenuOpen}
       x={submenuPosition[0]}
       y={submenuPosition[1]}
@@ -270,13 +434,11 @@
     >
       {#if indented}
         <div class:bx--menu-option__icon={true}>
-          <slot name="icon">
-            <svelte:component this={icon} />
-          </slot>
+          <slot name="icon"> <svelte:component this={icon} /> </slot>
         </div>
       {/if}
       <span class:bx--menu-option__label={true} title={labelText}>
-        <slot name="labelText">{labelText}</slot>
+        <slot name="labelChildren">{labelText}</slot>
       </span>
       <div class:bx--menu-option__info={true}>
         <slot name="shortcutText">{shortcutText}</slot>

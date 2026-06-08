@@ -1,49 +1,61 @@
 <script>
   /**
-   * @typedef {any} DropdownItemId
-   * @typedef {string} DropdownItemText
-   * @typedef {{ id: DropdownItemId; text: DropdownItemText; disabled?: boolean; }} DropdownItem
-   * @event {{ selectedId: DropdownItemId, selectedItem: DropdownItem }} select
-   * @slot {{ item: DropdownItem; index: number; }}
+   * @template {DropdownItem<any>} [Item=DropdownItem<any>]
    */
 
   /**
-   * Set the dropdown items
-   * @type {ReadonlyArray<DropdownItem>}
+   * @typedef {object} DropdownItem<Id=any>
+   * @property {Id} id
+   * @property {string} text
+   * @property {boolean} [disabled] - Whether the item is disabled
+   * @event select
+   * @type {object}
+   * @property {Item["id"]} selectedId
+   * @property {Item} selectedItem
+   * @slot {{ item: Item; index: number; }}
+   */
+
+  /**
+   * Set the dropdown items.
+   * @type {ReadonlyArray<Item>}
    */
   export let items = [];
 
   /**
-   * Override the display of a dropdown item
-   * @type {(item: DropdownItem) => string}
+   * Override the display of a dropdown item.
+   * @type {(item: Item) => string}
    */
-  export let itemToString = (item) => item.text || item.id;
+  export let itemToString = (item) => item.text ?? item.id;
 
   /**
-   * Specify the selected item id
-   * @type {DropdownItemId}
+   * Specify the selected item id.
+   * @type {Item["id"] | undefined}
+   * @bindable writable
    */
-  export let selectedId;
+  export let selectedId = undefined;
 
   /**
-   * Specify the type of dropdown
+   * Specify the type of dropdown.
    * @type {"default" | "inline"}
    */
   export let type = "default";
 
   /**
-   * Specify the direction of the dropdown menu
+   * Specify the direction of the dropdown menu.
    * @type {"bottom" | "top"}
    */
   export let direction = "bottom";
 
   /**
-   * Specify the size of the dropdown field
+   * Specify the size of the dropdown field.
    * @type {"sm" | "lg" | "xl"}
    */
   export let size = undefined;
 
-  /** Set to `true` to open the dropdown */
+  /**
+   * Set to `true` to open the dropdown.
+   * @bindable writable
+   */
   export let open = false;
 
   /** Set to `true` to enable the light variant */
@@ -53,7 +65,7 @@
   export let disabled = false;
 
   /** Specify the title text */
-  export let titleText = "";
+  export let labelText = "";
 
   /** Set to `true` to indicate an invalid state */
   export let invalid = false;
@@ -61,7 +73,7 @@
   /** Specify the invalid state text */
   export let invalidText = "";
 
-  /** Set to `true` to indicate an warning state */
+  /** Set to `true` to indicate a warning state */
   export let warn = false;
 
   /** Specify the warning state text */
@@ -70,8 +82,11 @@
   /** Specify the helper text */
   export let helperText = "";
 
+  /** Set to `true` to use the read-only variant */
+  export let readonly = false;
+
   /**
-   * Specify the list box label
+   * Specify the list box label.
    * @type {string}
    */
   export let label = undefined;
@@ -81,114 +96,336 @@
 
   /**
    * Override the chevron icon label based on the open state.
-   * Defaults to "Open menu" when closed and "Close menu" when open
+   * Defaults to "Open menu" when closed and "Close menu" when open.
    * @type {(id: import("../ListBox/ListBoxMenuIcon.svelte").ListBoxMenuIconTranslationId) => string}
    */
   export let translateWithId = undefined;
 
-  /** Set an id for the list box component */
-  export let id = "ccs-" + Math.random().toString(36);
+  /**
+   * Enable virtualization for large lists. Virtualization renders only the items currently visible in the viewport, improving performance for large lists.
+   *
+   * By default, virtualization is automatically enabled for lists with more than 100 items.
+   *
+   * Set `virtualize={false}` to explicitly disable virtualization, even for large lists.
+   *
+   * Set `virtualize={true}` to explicitly enable virtualization with default settings.
+   *
+   * Provide an object to customize virtualization behavior:
+   * - `itemHeight` (default: 40): The height in pixels of each item. Specify a custom value when using custom slots with multi-line items or different heights.
+   * - `containerHeight` (default: 300): The maximum height in pixels of the dropdown container.
+   * - `overscan` (default: 3): The number of extra items to render above and below the viewport for smoother scrolling. Higher values may cause more flickering during very fast scrolling.
+   * - `threshold` (default: 100): The minimum number of items required before virtualization activates. Lists with fewer items will render all items normally without virtualization.
+   * - `maxItems` (default: undefined): The maximum number of items to render. When undefined, all visible items are rendered.
+   * @type {undefined | boolean | { itemHeight?: number, containerHeight?: number, overscan?: number, threshold?: number, maxItems?: number }}
+   */
+  export let virtualize = undefined;
 
   /**
-   * Specify a name attribute for the list box
+   * Set to `true` to render the dropdown menu in a portal,
+   * allowing it to escape containers with `overflow: hidden`.
+   * When inside a Modal, defaults to `true` unless explicitly set to `false`.
+   * @type {boolean | undefined}
+   */
+  export let portalMenu = undefined;
+
+  /** Set an id for the list box component */
+  export let id = `ccs-${Math.random().toString(36)}`;
+
+  /**
+   * Specify a name attribute for the list box.
    * @type {string}
    */
   export let name = undefined;
 
-  /** Obtain a reference to the button HTML element */
+  /**
+   * Obtain a reference to the button HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { createEventDispatcher, onMount } from "svelte";
-  import WarningFilled from "../icons/WarningFilled.svelte";
+  /**
+   * Obtain a reference to the list HTML element.
+   * @type {null | HTMLDivElement}
+   * @bindable readonly
+   */
+  export let listRef = null;
+
+  import {
+    afterUpdate,
+    createEventDispatcher,
+    getContext,
+    onMount,
+    tick,
+  } from "svelte";
+  import Checkmark from "../icons/Checkmark.svelte";
   import WarningAltFilled from "../icons/WarningAltFilled.svelte";
+  import WarningFilled from "../icons/WarningFilled.svelte";
   import {
     ListBox,
     ListBoxMenu,
     ListBoxMenuIcon,
     ListBoxMenuItem,
   } from "../ListBox";
+  import { getMenuMaxHeight } from "../ListBox/list-box-utils.js";
+  import { debounce } from "../utils/debounce.js";
+  import { isOutsideClick } from "../utils/isOutsideClick.js";
+  import { nextEnabledIndex } from "../utils/moveIndex.js";
+  import {
+    resetVirtualScrollOnClose,
+    scrollHighlightedIntoView,
+    scrollSelectedIntoView,
+    virtualListState,
+  } from "../utils/virtualize.js";
 
   const dispatch = createEventDispatcher();
+  const insideModal = getContext("carbon:Modal");
+
+  $: effectivePortalMenu =
+    portalMenu === undefined ? !!insideModal : portalMenu;
+
+  $: menuAriaLabel = $$props["aria-label"] ?? (labelText || "Choose an item");
 
   let highlightedIndex = -1;
+  let prevHighlightedIndex = -1;
+  let typeaheadBuffer = "";
+  let listScrollTop = 0;
+  let prevOpen = false;
+  let itemsById = new Map();
 
-  $: inline = type === "inline";
-  $: selectedItem = items.find((item) => item.id === selectedId);
-  $: if (!open) {
-    highlightedIndex = -1;
-  }
+  const TYPEAHEAD_DELAY = 500;
 
-  function change(dir) {
-    let index = highlightedIndex + dir;
-
-    if (items.length === 0) return;
-    if (index < 0) {
-      index = items.length - 1;
-    } else if (index >= items.length) {
-      index = 0;
-    }
-
-    let disabled = items[index].disabled;
-
-    while (disabled) {
-      index = index + dir;
-
-      if (index < 0) {
-        index = items.length - 1;
-      } else if (index >= items.length) {
-        index = 0;
-      }
-
-      disabled = items[index].disabled;
-    }
-
-    highlightedIndex = index;
-  }
-
-  const dispatchSelect = () => {
-    dispatch("select", {
-      selectedId,
-      selectedItem: items.find((item) => item.id === selectedId),
-    });
-  };
-
-  const pageClickHandler = ({ target }) => {
-    if (open && ref && !ref.contains(target)) {
-      open = false;
-    }
-  };
+  // Clear the typeahead buffer once the user stops typing for TYPEAHEAD_DELAY ms.
+  const resetTypeaheadBuffer = debounce(() => {
+    typeaheadBuffer = "";
+  }, TYPEAHEAD_DELAY);
 
   onMount(() => {
-    if (parent) {
-      parent.addEventListener("click", pageClickHandler);
-    }
-
     return () => {
-      if (parent) {
-        parent.removeEventListener("click", pageClickHandler);
-      }
+      resetTypeaheadBuffer.cancel();
     };
   });
+
+  $: inline = type === "inline";
+  $: {
+    itemsById = new Map();
+    for (let index = 0; index < items.length; index++) {
+      itemsById.set(items[index].id, items[index]);
+    }
+  }
+  $: menuId = `menu-${id}`;
+  $: helperId = `helper-${id}`;
+  $: errorId = `error-${id}`;
+  $: warnId = `warn-${id}`;
+  // Invalid/warn states are suppressed when the dropdown is disabled or read-only.
+  $: showInvalid = invalid && !disabled && !readonly;
+  $: showWarn = warn && !invalid && !disabled && !readonly;
+  $: highlightedId =
+    highlightedIndex > -1 && items[highlightedIndex]
+      ? items[highlightedIndex].id
+      : undefined;
+  $: selectedItem = itemsById.get(selectedId);
+  $: if (!open) {
+    highlightedIndex = -1;
+    prevHighlightedIndex = -1;
+    typeaheadBuffer = "";
+    resetTypeaheadBuffer.cancel();
+  }
+
+  $: shouldVirtualize =
+    virtualize === false
+      ? false
+      : virtualize !== undefined || items.length > 100;
+
+  $: menuMaxHeight = getMenuMaxHeight(size);
+
+  $: virtualState = virtualListState({
+    items,
+    scrollTop: listScrollTop,
+    shouldVirtualize,
+    virtualize,
+  });
+  $: virtualConfig = virtualState.config;
+  $: virtualData = virtualState.data;
+  $: itemsToRender = virtualState.itemsToRender;
+
+  afterUpdate(() => {
+    // Scroll to highlighted item when it changes via keyboard navigation
+    // Only scroll if the item is outside the visible viewport
+    if (
+      open &&
+      shouldVirtualize &&
+      virtualConfig &&
+      highlightedIndex !== prevHighlightedIndex &&
+      highlightedIndex >= 0 &&
+      listRef
+    ) {
+      tick().then(() => {
+        if (listRef && virtualConfig && highlightedIndex >= 0) {
+          const nextScrollTop = scrollHighlightedIntoView({
+            highlightedIndex,
+            currentScrollTop: listRef.scrollTop ?? listScrollTop,
+            itemCount: items.length,
+            itemHeight: virtualConfig.itemHeight,
+            containerHeight: virtualConfig.containerHeight,
+            overscan: virtualConfig.overscan ?? 3,
+          });
+          if (nextScrollTop !== null) {
+            listScrollTop = nextScrollTop;
+            listRef.scrollTop = nextScrollTop;
+          }
+        }
+      });
+      prevHighlightedIndex = highlightedIndex;
+    }
+
+    // Set highlighted index to selected item when menu opens
+    const wasJustOpened = open && !prevOpen;
+    const selectedIndex =
+      wasJustOpened && selectedId !== undefined && selectedItem
+        ? items.findIndex((item) => item.id === selectedId)
+        : -1;
+    if (wasJustOpened && selectedIndex >= 0) {
+      // Set highlighted index to selected item so keyboard nav starts there
+      highlightedIndex = selectedIndex;
+      prevHighlightedIndex = selectedIndex;
+    }
+
+    // Scroll to selected item when menu opens without virtualization.
+    // The list may overflow its max-height even below the virtualization threshold.
+    if (
+      wasJustOpened &&
+      !shouldVirtualize &&
+      listRef &&
+      selectedId !== undefined &&
+      selectedItem
+    ) {
+      tick().then(() => {
+        if (!listRef) return;
+        const selectedEl = listRef.querySelector('[aria-selected="true"]');
+        if (!selectedEl) return;
+        // Adjust the menu's own scrollTop instead of scrollIntoView,
+        // which would also scroll the document.
+        listRef.scrollTop +=
+          selectedEl.getBoundingClientRect().top -
+          listRef.getBoundingClientRect().top;
+      });
+    }
+
+    // Scroll to selected item when menu opens with virtualization
+    if (wasJustOpened && shouldVirtualize && listRef) {
+      tick().then(() => {
+        if (listRef && virtualConfig) {
+          const nextScrollTop = scrollSelectedIntoView({
+            selectedIndex,
+            itemCount: items.length,
+            itemHeight: virtualConfig.itemHeight,
+            containerHeight: virtualConfig.containerHeight,
+          });
+          listScrollTop = nextScrollTop;
+          listRef.scrollTop = nextScrollTop;
+        }
+      });
+    }
+    prevOpen = open;
+
+    // Reset scroll position when menu closes
+    if (!open && shouldVirtualize) {
+      listScrollTop = resetVirtualScrollOnClose();
+    }
+  });
+
+  function change(step) {
+    highlightedIndex = nextEnabledIndex({
+      items,
+      index: highlightedIndex,
+      step,
+    });
+  }
+
+  function typeaheadSearch(character) {
+    if (items.length === 0) return;
+
+    typeaheadBuffer += character.toLowerCase();
+    resetTypeaheadBuffer();
+
+    // Start search from the next index after current highlight, or from 0 if none highlighted.
+    const startIndex = highlightedIndex >= 0 ? highlightedIndex + 1 : 0;
+
+    for (let index = startIndex; index < items.length; index++) {
+      const itemText = itemToString(items[index]).toLowerCase();
+      if (itemText.startsWith(typeaheadBuffer) && !items[index].disabled) {
+        highlightedIndex = index;
+        return;
+      }
+    }
+
+    // Wrap around: search from beginning to startIndex.
+    for (let index = 0; index < startIndex; index++) {
+      const itemText = itemToString(items[index]).toLowerCase();
+      if (itemText.startsWith(typeaheadBuffer) && !items[index].disabled) {
+        highlightedIndex = index;
+        return;
+      }
+    }
+  }
+
+  function dispatchSelect() {
+    dispatch("select", {
+      selectedId,
+      selectedItem: itemsById.get(selectedId),
+    });
+  }
+
+  function selectHighlighted() {
+    open = !open;
+    if (highlightedIndex > -1 && items[highlightedIndex].id !== selectedId) {
+      selectedId = items[highlightedIndex].id;
+      dispatchSelect();
+      open = false;
+    }
+  }
+
+  $: dropdownListBoxClass = [
+    "bx--dropdown",
+    direction === "top" && "bx--list-box--up",
+    showInvalid && "bx--dropdown--invalid",
+    showWarn && "bx--dropdown--warning",
+    open && "bx--dropdown--open",
+    size === "sm" && "bx--dropdown--sm",
+    size === "xl" && "bx--dropdown--xl",
+    inline && "bx--dropdown--inline",
+    disabled && "bx--dropdown--disabled",
+    light && "bx--dropdown--light",
+    readonly && "bx--dropdown--readonly",
+  ]
+    .filter(Boolean)
+    .join(" ");
 </script>
 
-<svelte:window on:click={pageClickHandler} />
+<svelte:window
+  on:click={(event) => {
+    if (open && isOutsideClick(event, [ref, effectivePortalMenu && listRef])) {
+      open = false;
+    }
+  }}
+/>
 
 <div
   class:bx--dropdown__wrapper={true}
   class:bx--list-box__wrapper={true}
   class:bx--dropdown__wrapper--inline={inline}
   class:bx--list-box__wrapper--inline={inline}
-  class:bx--dropdown__wrapper--inline--invalid={inline && invalid}
+  class:bx--dropdown__wrapper--inline--invalid={inline && showInvalid}
   {...$$restProps}
 >
-  {#if titleText}
+  {#if labelText || $$slots.labelChildren}
     <label
       for={id}
       class:bx--label={true}
       class:bx--label--disabled={disabled}
       class:bx--visually-hidden={hideLabel}
     >
-      {titleText}
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
   {/if}
   <ListBox
@@ -197,32 +434,21 @@
     {size}
     {name}
     aria-label={$$props["aria-label"]}
-    class="bx--dropdown 
-      {direction === 'top' && 'bx--list-box--up'} 
-      {invalid && 'bx--dropdown--invalid'} 
-      {!invalid && warn && 'bx--dropdown--warning'} 
-      {open && 'bx--dropdown--open'}
-      {size === 'sm' && 'bx--dropdown--sm'}
-      {size === 'xl' && 'bx--dropdown--xl'}
-      {inline && 'bx--dropdown--inline'}
-      {disabled && 'bx--dropdown--disabled'}
-      {light && 'bx--dropdown--light'}"
-    on:click={({ target }) => {
-      if (disabled) return;
-      open = ref.contains(target) ? !open : false;
+    class={dropdownListBoxClass}
+    on:click={(event) => {
+      if (disabled || readonly) return;
+      open = ref.contains(event.target) ? !open : false;
     }}
     {disabled}
     {open}
-    {invalid}
-    {invalidText}
+    invalid={showInvalid}
     {light}
-    {warn}
-    {warnText}
+    warn={showWarn}
   >
-    {#if invalid}
+    {#if showInvalid}
       <WarningFilled class="bx--list-box__invalid-icon" />
     {/if}
-    {#if !invalid && warn}
+    {#if showWarn}
       <WarningAltFilled
         class="bx--list-box__invalid-icon bx--list-box__invalid-icon--warning"
       />
@@ -230,65 +456,79 @@
     <button
       bind:this={ref}
       type="button"
+      role="combobox"
       class:bx--list-box__field={true}
       tabindex="0"
       aria-expanded={open}
-      on:keydown={(e) => {
-        const { key } = e;
-        if (["Enter", "ArrowDown", "ArrowUp"].includes(key)) {
-          e.preventDefault();
+      aria-disabled={readonly || undefined}
+      aria-readonly={readonly || undefined}
+      aria-haspopup="listbox"
+      aria-activedescendant={highlightedId ?? ""}
+      aria-controls={open ? menuId : undefined}
+      aria-describedby={showInvalid && invalidText
+        ? errorId
+        : showWarn && warnText
+          ? warnId
+          : !inline && !showInvalid && !showWarn && helperText
+            ? helperId
+            : undefined}
+      on:keydown={(event) => {
+        if (
+          event.key === "Enter" ||
+          event.key === "ArrowDown" ||
+          event.key === "ArrowUp"
+        ) {
+          event.preventDefault();
         }
-        if (key === "Enter") {
-          open = !open;
-          if (
-            highlightedIndex > -1 &&
-            items[highlightedIndex].id !== selectedId
-          ) {
-            selectedId = items[highlightedIndex].id;
-            dispatchSelect();
-            open = false;
-          }
-        } else if (key === "Tab") {
+
+        if (readonly) return;
+
+        if (event.key === "Enter") {
+          selectHighlighted();
+        } else if (event.key === "Tab") {
           open = false;
-        } else if (key === "ArrowDown") {
+        } else if (event.key === "ArrowDown") {
           if (!open) open = true;
           change(1);
-        } else if (key === "ArrowUp") {
+        } else if (event.key === "ArrowUp") {
           if (!open) open = true;
           change(-1);
-        } else if (key === "Escape") {
+        } else if (event.key === "Escape") {
           open = false;
+        } else if (
+          open &&
+          event.key.length === 1 &&
+          event.key !== " " &&
+          !event.ctrlKey &&
+          !event.metaKey &&
+          !event.altKey
+        ) {
+          event.preventDefault();
+          typeaheadSearch(event.key);
         }
       }}
-      on:keyup={(e) => {
-        const { key } = e;
-        if ([" "].includes(key)) {
-          e.preventDefault();
+      on:keyup={(event) => {
+        if (event.key === " ") {
+          event.preventDefault();
         } else {
           return;
         }
-        open = !open;
-
-        if (
-          highlightedIndex > -1 &&
-          items[highlightedIndex].id !== selectedId
-        ) {
-          selectedId = items[highlightedIndex].id;
-          dispatchSelect();
-          open = false;
-        }
+        selectHighlighted();
       }}
       {disabled}
-      {translateWithId}
       {id}
     >
       <span class:bx--list-box__label={true}>
-        {#if selectedItem}{itemToString(selectedItem)}{:else}{label}{/if}
+        {#if selectedItem}
+          {itemToString(selectedItem)}
+        {:else}
+          {label}
+        {/if}
       </span>
       <ListBoxMenuIcon
-        on:click={(e) => {
-          e.stopPropagation();
-          if (disabled) return;
+        on:click={(event) => {
+          event.stopPropagation();
+          if (disabled || readonly) return;
           open = !open;
         }}
         {translateWithId}
@@ -296,37 +536,100 @@
       />
     </button>
     {#if open}
-      <ListBoxMenu aria-labelledby={id} {id}>
-        {#each items as item, i (item.id)}
-          <ListBoxMenuItem
-            id={item.id}
-            active={selectedId === item.id}
-            highlighted={highlightedIndex === i}
-            disabled={item.disabled}
-            on:click={(e) => {
-              if (item.disabled) {
-                e.stopPropagation();
-                return;
-              }
-              selectedId = item.id;
-              dispatchSelect();
-              ref.focus();
-            }}
-            on:mouseenter={() => {
-              if (item.disabled) return;
-              highlightedIndex = i;
-            }}
-          >
-            <slot {item} index={i}>
-              {itemToString(item)}
-            </slot>
-          </ListBoxMenuItem>
-        {/each}
+      <ListBoxMenu
+        aria-label={menuAriaLabel}
+        {id}
+        portal={effectivePortalMenu}
+        {open}
+        anchor={ref}
+        {direction}
+        on:scroll
+        on:scroll={(event) => {
+          listScrollTop = event.target.scrollTop;
+        }}
+        bind:ref={listRef}
+        style={effectivePortalMenu
+          ? `max-height: ${virtualConfig
+              ? `${virtualConfig.containerHeight}px; overflow-y: auto`
+              : menuMaxHeight};`
+          : virtualConfig
+            ? `max-height: ${virtualConfig.containerHeight}px; overflow-y: auto;`
+            : undefined}
+      >
+        {#if virtualData?.isVirtualized}
+          <div style="height: {virtualData.totalHeight}px; position: relative;">
+            <div style="transform: translateY({virtualData.offsetY}px);">
+              {#each itemsToRender as item, index (item.id)}
+                {@const actualIndex = virtualData.startIndex + index}
+                <ListBoxMenuItem
+                  id={item.id}
+                  active={selectedId === item.id}
+                  highlighted={highlightedIndex === actualIndex}
+                  disabled={item.disabled}
+                  on:click={(event) => {
+                    if (item.disabled) {
+                      event.stopPropagation();
+                      return;
+                    }
+                    selectedId = item.id;
+                    dispatchSelect();
+                    open = false;
+                    ref.focus();
+                  }}
+                  on:mouseenter={() => {
+                    if (item.disabled) return;
+                    highlightedIndex = actualIndex;
+                  }}
+                >
+                  <slot {item} index={actualIndex}> {itemToString(item)} </slot>
+                  {#if selectedId === item.id}
+                    <Checkmark class="bx--list-box__menu-item__selected-icon" />
+                  {/if}
+                </ListBoxMenuItem>
+              {/each}
+            </div>
+          </div>
+        {:else}
+          {#each itemsToRender as item, index (item.id)}
+            <ListBoxMenuItem
+              id={item.id}
+              active={selectedId === item.id}
+              highlighted={highlightedIndex === index}
+              disabled={item.disabled}
+              on:click={(event) => {
+                if (item.disabled) {
+                  event.stopPropagation();
+                  return;
+                }
+                selectedId = item.id;
+                dispatchSelect();
+                open = false;
+                ref.focus();
+              }}
+              on:mouseenter={() => {
+                if (item.disabled) return;
+                highlightedIndex = index;
+              }}
+            >
+              <slot {item} {index}> {itemToString(item)} </slot>
+              {#if selectedId === item.id}
+                <Checkmark class="bx--list-box__menu-item__selected-icon" />
+              {/if}
+            </ListBoxMenuItem>
+          {/each}
+        {/if}
       </ListBoxMenu>
     {/if}
   </ListBox>
-  {#if !inline && !invalid && !warn && helperText}
+  {#if showInvalid && invalidText}
+    <div id={errorId} class:bx--form-requirement={true}>{invalidText}</div>
+  {/if}
+  {#if showWarn && warnText}
+    <div id={warnId} class:bx--form-requirement={true}>{warnText}</div>
+  {/if}
+  {#if !inline && !showInvalid && !showWarn && helperText}
     <div
+      id={helperId}
       class:bx--form__helper-text={true}
       class:bx--form__helper-text--disabled={disabled}
     >

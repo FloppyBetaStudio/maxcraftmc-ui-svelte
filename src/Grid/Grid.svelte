@@ -5,8 +5,14 @@
    */
 
   /**
-   * Set to `true` to render a custom HTML element
-   * Props are destructured as `props` in the default slot (e.g., <Grid let:props><header {...props}>...</header></Grid>)
+   * Set to `true` to render a custom HTML element.
+   * Props are destructured as `props` in the default slot.
+   * @example
+   * ```svelte
+   * <Grid let:props>
+   *   <header {...props}>Content</header>
+   * </Grid>
+   * ```
    */
   export let as = false;
 
@@ -52,7 +58,5 @@
 {#if as}
   <slot {props} />
 {:else}
-  <div {...props}>
-    <slot />
-  </div>
+  <div {...props}><slot /></div>
 {/if}

@@ -1,0 +1,29 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["label"];
+
+type $Props = {
+  /**
+   * Set an id to be used by the label element
+   * @default `ccs-${Math.random().toString(36)}`
+   */
+  id?: string;
+
+  children?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type FormLabelProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class FormLabel extends SvelteComponentTyped<
+  FormLabelProps,
+  {
+    click: WindowEventMap["click"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  { default: Record<string, never> }
+> {}

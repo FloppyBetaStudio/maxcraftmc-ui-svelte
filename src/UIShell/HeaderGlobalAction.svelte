@@ -1,5 +1,6 @@
 <script>
   /**
+   * @template [Icon=any]
    * @extends {"../Button/Button.svelte"} ButtonProps
    */
 
@@ -7,13 +8,15 @@
   export let isActive = false;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
-  /** Obtain a reference to the HTML button element
+  /**
+   * Obtain a reference to the HTML button element.
    * @type {HTMLButtonElement}
+   * @bindable readonly
    */
   export let ref = null;
 

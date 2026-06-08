@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Updated the compatibility baseline to `carbon-components-svelte@0.108.0`.
+- Synced upstream component source, colocated type definitions, and Carbon CSS
+  entrypoints.
+- Updated package exports to use the upstream `src/*.d.ts` type layout.
+- Kept the MaxCraft theme layer as the package-specific visual extension.
+
 ## 0.1.3
 
 - Added byte-for-byte upstream sync checks for `src/` and `types/`.
@@ -20,7 +28,7 @@
 
 Initial MaxCraft compatibility package.
 
-- Added full `carbon-components-svelte@0.89.4` component, type, and CSS
+- Added full `carbon-components-svelte@0.108.0` component, type, and CSS
   compatibility surface.
 - Added `css/maxcraft.css` and `tokens/maxcraft.css`.
 - Added API, CSS entrypoint, and docs checks.

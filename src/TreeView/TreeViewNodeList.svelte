@@ -1,28 +1,44 @@
 <script>
   /**
-   * @typedef {string | number} TreeNodeId
-   * @typedef {{ id: TreeNodeId; text: string; disabled?: boolean; expanded?: boolean; }} TreeNode
-   * @slot {{ node: { id: TreeNodeId; text: string; expanded: boolean, leaf: boolean; disabled: boolean; selected: boolean; } }}
+   * @generics {Id extends string | number = string | number, Icon = any} Id,Icon
+   * @typedef {{ id: Id; text: string; disabled?: boolean; expanded?: boolean; }} TreeNode<Id>
+   * @slot {{ node: TreeNode<Id> & { expanded: boolean; leaf: boolean; selected: boolean; } }}
    */
 
-  /** @type {Array<TreeNode & { nodes?: TreeNode[] }>} */
+  /** @type {ReadonlyArray<TreeNode<Id> & { nodes?: TreeNode<Id>[] }>} */
   export let nodes = [];
   export let root = false;
 
-  /** @type {string | number} */
+  /** @type {Id} */
   export let id = "";
   export let text = "";
   export let disabled = false;
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = undefined;
+  export let icon = /** @type {Icon} */ (undefined);
 
   import { afterUpdate, getContext } from "svelte";
   import CaretDown from "../icons/CaretDown.svelte";
-  import TreeViewNode, { computeTreeLeafDepth } from "./TreeViewNode.svelte";
+  import TreeViewNode, {
+    computeTreeLeafDepth,
+    findParentTreeNode,
+  } from "./TreeViewNode.svelte";
+
+  /**
+   * First focusable tree item in a subtree `ul` — handles both bare
+   * `li.bx--tree-node` rows and the link variant (`li[role="none"] > a`).
+   * @returns {HTMLElement | null}
+   */
+  function firstTreeItemInGroup(groupUl) {
+    const row = groupUl.firstElementChild;
+    if (!(row instanceof HTMLElement)) return null;
+    if (row.classList.contains("bx--tree-node")) return row;
+    const nested = row.querySelector(".bx--tree-node");
+    return nested instanceof HTMLElement ? nested : null;
+  }
 
   let ref = null;
   let refLabel = null;
@@ -30,54 +46,62 @@
 
   const {
     activeNodeId,
-    selectedNodeIds,
-    expandedNodeIds,
+    selectedIdsSetStore,
+    expandedIdsSetStore,
     clickNode,
     selectNode,
     expandNode,
     focusNode,
     toggleNode,
-  } = getContext("TreeView");
+  } = getContext("carbon:TreeView");
 
-  const offset = () => {
-    const depth = computeTreeLeafDepth(refLabel);
+  function offset() {
+    const depth = computeTreeLeafDepth(refLabel) - 1;
 
     if (parent) return depth + 1;
     if (icon) return depth + 2;
     return depth + 2.5;
-  };
+  }
 
   afterUpdate(() => {
-    if (id === $activeNodeId && prevActiveId !== $activeNodeId) {
-      if (!$selectedNodeIds.includes(id)) selectNode(node);
-    }
+    if (
+      id === $activeNodeId &&
+      prevActiveId !== $activeNodeId &&
+      !$selectedIdsSetStore.has(id)
+    )
+      selectNode(node);
 
     prevActiveId = $activeNodeId;
   });
 
   $: parent = Array.isArray(nodes);
-  $: node = { id, text, expanded, leaf: !parent };
+  $: expanded = $expandedIdsSetStore.has(id);
+  $: selected = $selectedIdsSetStore.has(id);
+  // Merge all props (including custom properties) with computed properties
+  // Explicitly reference text and disabled to avoid Svelte warning and ensure they're included
+  $: node = {
+    ...$$props,
+    text, // Ensure text is included and marked as used
+    disabled, // Ensure disabled is always included (has default value)
+    expanded,
+    leaf: !parent,
+    selected,
+  };
   $: if (refLabel) {
     refLabel.style.marginLeft = `-${offset()}rem`;
     refLabel.style.paddingLeft = `${offset()}rem`;
   }
-  $: expanded = $expandedNodeIds.includes(id);
 </script>
 
 {#if root}
   {#each nodes as child (child.id)}
     {#if Array.isArray(child.nodes)}
-      <svelte:self {...child} let:node>
-        <slot {node} />
-      </svelte:self>
+      <svelte:self {...child} let:node> <slot {node} /> </svelte:self>
     {:else}
-      <TreeViewNode leaf {...child} let:node>
-        <slot {node} />
-      </TreeViewNode>
+      <TreeViewNode leaf {...child} let:node> <slot {node} /> </TreeViewNode>
     {/if}
   {/each}
 {:else}
-  {@const selected = $selectedNodeIds.includes(id)}
   <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
   <li
     bind:this={ref}
@@ -94,42 +118,52 @@
     class:bx--tree-node--disabled={disabled}
     class:bx--tree-node--with-icon={icon}
     aria-expanded={expanded}
-    on:click|stopPropagation={() => {
+    aria-owns={`${id}-subtree`}
+    on:click|stopPropagation={(event) => {
       if (disabled) return;
-      clickNode(node);
+      clickNode(node, event);
     }}
-    on:keydown={(e) => {
+    on:keydown={(event) => {
       if (
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight" ||
-        e.key === "Enter"
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "Enter"
       ) {
-        e.stopPropagation();
+        event.stopPropagation();
       }
 
-      if (parent && e.key === "ArrowLeft") {
-        expanded = false;
-        expandNode(node, false);
-        toggleNode(node);
-      }
-
-      if (parent && e.key === "ArrowRight") {
+      if (parent && event.key === "ArrowLeft") {
         if (expanded) {
-          ref.lastChild.firstElementChild?.focus();
+          expandNode(node, false);
+          toggleNode(node);
         } else {
-          expanded = true;
+          const parentNode = findParentTreeNode(ref.parentElement);
+          if (parentNode instanceof HTMLElement) parentNode.focus();
+        }
+      }
+
+      if (parent && event.key === "ArrowRight") {
+        if (expanded) {
+          const groupUl = ref.lastElementChild;
+          if (groupUl instanceof HTMLElement) {
+            const next = firstTreeItemInGroup(groupUl);
+            next?.focus();
+          }
+        } else {
           expandNode(node, true);
           toggleNode(node);
         }
       }
 
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
         if (disabled) return;
-        expanded = !expanded;
-        toggleNode(node);
-        clickNode(node);
-        expandNode(node, expanded);
+        if (event.key === "Enter" && parent) {
+          const nextExpanded = !expanded;
+          expandNode(node, nextExpanded);
+          toggleNode(node);
+        }
+        clickNode(node, event);
         ref.focus();
       }
     }}
@@ -145,35 +179,43 @@
         {disabled}
         on:click={() => {
           if (disabled) return;
-          expanded = !expanded;
-          expandNode(node, expanded);
+          const nextExpanded = !expanded;
+          expandNode(node, nextExpanded);
           toggleNode(node);
         }}
       >
         <CaretDown
-          class="bx--tree-parent-node__toggle-icon {expanded &&
-            'bx--tree-parent-node__toggle-icon--expanded'}"
+          class={[
+            "bx--tree-parent-node__toggle-icon",
+            expanded && "bx--tree-parent-node__toggle-icon--expanded",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         />
       </span>
       <span class:bx--tree-node__label__details={true}>
         <svelte:component this={icon} class="bx--tree-node__icon" />
-        <slot node={{ ...node, selected, disabled }} />
+        <span id={`${id}__label`} class:bx--tree-node__label__text={true}>
+          <slot {node} />
+        </span>
       </span>
     </div>
-    {#if expanded}
-      <ul role="group" class:bx--tree-node__children={true}>
-        {#each nodes as child (child.id)}
-          {#if Array.isArray(child.nodes)}
-            <svelte:self {...child} let:node>
-              <slot {node} />
-            </svelte:self>
-          {:else}
-            <TreeViewNode leaf {...child} let:node>
-              <slot {node}>{node.text}</slot>
-            </TreeViewNode>
-          {/if}
-        {/each}
-      </ul>
-    {/if}
+    <ul
+      id={`${id}-subtree`}
+      role="group"
+      aria-labelledby={`${id}__label`}
+      class:bx--tree-node__children={true}
+      class:bx--tree-node--hidden={!expanded}
+    >
+      {#each nodes as child (child.id)}
+        {#if Array.isArray(child.nodes)}
+          <svelte:self {...child} let:node> <slot {node} /> </svelte:self>
+        {:else}
+          <TreeViewNode leaf {...child} let:node>
+            <slot {node}>{node.text}</slot>
+          </TreeViewNode>
+        {/if}
+      {/each}
+    </ul>
   </li>
 {/if}

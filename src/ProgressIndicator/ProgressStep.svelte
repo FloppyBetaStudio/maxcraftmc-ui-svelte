@@ -2,7 +2,10 @@
   /** Set to `true` for the complete variant */
   export let complete = false;
 
-  /** Set to `true` to use the current variant */
+  /**
+   * Set to `true` to use the current variant.
+   * @bindable writable
+   */
   export let current = false;
 
   /** Set to `true` to disable the progress step */
@@ -21,18 +24,23 @@
   export let secondaryLabel = "";
 
   /** Set an id for the top-level element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  import { onMount, getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
+  import { writable } from "svelte/store";
   import CheckmarkOutline from "../icons/CheckmarkOutline.svelte";
-  import Warning from "../icons/Warning.svelte";
   import CircleDash from "../icons/CircleDash.svelte";
   import Incomplete from "../icons/Incomplete.svelte";
+  import Warning from "../icons/Warning.svelte";
 
   let step = {};
 
-  const { stepsById, add, change, preventChangeOnClick } =
-    getContext("ProgressIndicator");
+  const ctx = getContext("carbon:ProgressIndicator");
+  const stepsById = ctx?.stepsById ?? writable({});
+  const add = ctx?.add ?? (() => {});
+  const remove = ctx?.remove ?? (() => {});
+  const change = ctx?.change ?? (() => {});
+  const preventChangeOnClick = ctx?.preventChangeOnClick ?? writable(false);
 
   $: add({ id, complete, disabled });
 
@@ -40,13 +48,13 @@
     if (value[id]) {
       step = value[id];
       current = step.current;
-      complete = step.complete;
     }
   });
 
   onMount(() => {
     return () => {
       unsubscribe();
+      remove(id);
     };
   });
 </script>
@@ -78,22 +86,20 @@
     on:mouseenter
     on:mouseleave
     on:keydown
-    on:keydown={(e) => {
-      if (!step.complete) return;
-      if (e.key === " " || e.key === "Enter") {
-        change(step.index);
-      }
-    }}
+    on:focus
+    on:blur
   >
-    {#if invalid}
-      <Warning class="bx--progress__warning" title={description} />
-    {:else if current}
-      <Incomplete title={description} />
-    {:else if complete}
-      <CheckmarkOutline title={description} />
-    {:else}
-      <CircleDash title={description} />
-    {/if}
+    <slot name="icon" {complete} {current} {invalid} {description}>
+      {#if invalid}
+        <Warning class="bx--progress__warning" title={description} />
+      {:else if current}
+        <Incomplete title={description} />
+      {:else if complete}
+        <CheckmarkOutline title={description} />
+      {:else}
+        <CircleDash title={description} />
+      {/if}
+    </slot>
     <div class:bx--progress-text={true}>
       <slot props={{ class: "bx--progress-label" }}>
         <p class:bx--progress-label={true}>{label}</p>

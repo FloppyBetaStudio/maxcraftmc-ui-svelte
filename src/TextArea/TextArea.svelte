@@ -2,20 +2,26 @@
   /**
    * Specify the textarea value.
    * @type {null | string}
+   * @bindable writable
    */
   export let value = "";
 
   /** Specify the placeholder text */
   export let placeholder = "";
 
-  /** Specify the number of cols */
-  export let cols = 50;
+  /**
+   * Specify the number of cols.
+   * If specified, the textarea will not be resizable.
+   * Override this using the `resize` style attribute.
+   * @type {number}
+   */
+  export let cols = undefined;
 
   /** Specify the number of rows */
   export let rows = 4;
 
   /**
-   * Specify the max character count
+   * Specify the max character count.
    * @type {number}
    */
   export let maxCount = undefined;
@@ -44,21 +50,32 @@
   /** Specify the text for the invalid state */
   export let invalidText = "";
 
+  /** Set to `true` to indicate a warning state */
+  export let warn = false;
+
+  /** Specify the warning state text */
+  export let warnText = "";
+
   /** Set an id for the textarea element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Specify a name attribute for the input
+   * Specify a name attribute for the input.
    * @type {string}
    */
   export let name = undefined;
 
-  /** Obtain a reference to the textarea HTML element */
+  /**
+   * Obtain a reference to the textarea HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
+  import WarningAltFilled from "../icons/WarningAltFilled.svelte";
   import WarningFilled from "../icons/WarningFilled.svelte";
 
   $: errorId = `error-${id}`;
+  $: warnId = `warn-${id}`;
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -71,7 +88,7 @@
   on:mouseleave
   class:bx--form-item={true}
 >
-  {#if labelText || $$slots.labelText}
+  {#if labelText || $$slots.labelChildren}
     <div class:bx--text-area__label-wrapper={true}>
       <label
         for={id}
@@ -79,9 +96,7 @@
         class:bx--visually-hidden={hideLabel}
         class:bx--label--disabled={disabled}
       >
-        <slot name="labelText">
-          {labelText}
-        </slot>
+        <slot name="labelChildren"> {labelText} </slot>
       </label>
       {#if maxCount}
         <div class:bx--label={true} class:bx--label--disabled={disabled}>
@@ -90,15 +105,27 @@
       {/if}
     </div>
   {/if}
-  <div class:bx--text-area__wrapper={true} data-invalid={invalid || undefined}>
+  <div
+    class:bx--text-area__wrapper={true}
+    class:bx--text-area__wrapper--readonly={readonly}
+    data-invalid={invalid || undefined}
+    data-warn={warn || undefined}
+  >
     {#if invalid}
       <WarningFilled class="bx--text-area__invalid-icon" />
+    {/if}
+    {#if !invalid && warn}
+      <WarningAltFilled
+        class="bx--text-area__invalid-icon
+        bx--text-area__invalid-icon--warning"
+      />
     {/if}
     <textarea
       bind:this={ref}
       bind:value
       aria-invalid={invalid || undefined}
-      aria-describedby={invalid ? errorId : undefined}
+      aria-describedby={invalid ? errorId : warn ? warnId : undefined}
+      data-warn={warn || undefined}
       {disabled}
       {id}
       {name}
@@ -109,6 +136,8 @@
       class:bx--text-area={true}
       class:bx--text-area--light={light}
       class:bx--text-area--invalid={invalid}
+      class:bx--text-area--warning={warn}
+      style:resize={typeof cols === "number" ? "none" : undefined}
       maxlength={maxCount ?? undefined}
       {...$$restProps}
       on:change
@@ -120,7 +149,7 @@
       on:paste
     ></textarea>
   </div>
-  {#if !invalid && helperText}
+  {#if !invalid && !warn && helperText}
     <div
       class:bx--form__helper-text={true}
       class:bx--form__helper-text--disabled={disabled}
@@ -130,5 +159,8 @@
   {/if}
   {#if invalid}
     <div id={errorId} class:bx--form-requirement={true}>{invalidText}</div>
+  {/if}
+  {#if !invalid && warn}
+    <div id={warnId} class:bx--form-requirement={true}>{warnText}</div>
   {/if}
 </div>

@@ -1,7 +1,9 @@
 <script>
   /**
    * @typedef {boolean | number} ColumnSize
-   * @typedef {{span?: ColumnSize; offset: number;}} ColumnSizeDescriptor
+   * @typedef ColumnSizeDescriptor
+   * @property {ColumnSize} [span]
+   * @property {number} offset
    * @typedef {ColumnSize | ColumnSizeDescriptor} ColumnBreakpoint
    * @restProps {div}
    * @slot {{props: { class: string; [key: string]: any; }}}
@@ -12,8 +14,14 @@
    */
 
   /**
-   * Set to `true` to render a custom HTML element
-   * Props are destructured as `props` in the default slot (e.g., <Column let:props><article {...props}>...</article></Column>)
+   * Set to `true` to render a custom HTML element.
+   * Props are destructured as `props` in the default slot.
+   * @example
+   * ```svelte
+   * <Column let:props>
+   *   <article {...props}>Content</article>
+   * </Column>
+   * ```
    */
   export let as = false;
 
@@ -30,37 +38,37 @@
   export let padding = false;
 
   /**
-   * Specify the aspect ratio of the column
+   * Specify the aspect ratio of the column.
    * @type {"2x1" | "16x9" | "9x16" | "1x2" | "4x3" | "3x4" | "1x1"}
    */
   export let aspectRatio = undefined;
 
   /**
-   * Set the small breakpoint
+   * Set the small breakpoint.
    * @type {ColumnBreakpoint}
    */
   export let sm = undefined;
 
   /**
-   * Set the medium breakpoint
+   * Set the medium breakpoint.
    * @type {ColumnBreakpoint}
    */
   export let md = undefined;
 
   /**
-   * Set the large breakpoint
+   * Set the large breakpoint.
    * @type {ColumnBreakpoint}
    */
   export let lg = undefined;
 
   /**
-   * Set the extra large breakpoint
+   * Set the extra large breakpoint.
    * @type {ColumnBreakpoint}
    */
   export let xlg = undefined;
 
   /**
-   * Set the maximum breakpoint
+   * Set the maximum breakpoint.
    * @type {ColumnBreakpoint}
    */
   export let max = undefined;
@@ -90,6 +98,8 @@
 
         return bp.join(" ");
       }
+
+      return undefined;
     })
     .filter(Boolean)
     .join(" ");
@@ -113,7 +123,5 @@
 {#if as}
   <slot {props} />
 {:else}
-  <div {...props}>
-    <slot />
-  </div>
+  <div {...props}><slot /></div>
 {/if}

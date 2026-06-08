@@ -1,0 +1,154 @@
+@import "carbon-components/scss/globals/scss/vars";
+@import "carbon-components/scss/globals/scss/helper-mixins";
+@import "carbon-components/scss/globals/scss/vendor/@carbon/elements/scss/import-once/import-once";
+
+/// Tab icon styles
+/// @access private
+/// @group components
+@mixin tabs-icon {
+  .#{$prefix}--tabs__nav-link:has(.#{$prefix}--tabs__nav-item--icon) {
+    display: flex;
+    align-items: center;
+  }
+
+  .#{$prefix}--tabs__nav-item--icon {
+    display: flex;
+    align-items: center;
+    padding-inline-start: $carbon--spacing-03;
+  }
+
+  .#{$prefix}--tabs__nav-item--disabled .#{$prefix}--tabs__nav-item--icon svg {
+    fill: $disabled-02;
+  }
+
+  .#{$prefix}--tabs--container
+    .#{$prefix}--tabs__nav-item--disabled
+    .#{$prefix}--tabs__nav-item--icon
+    svg {
+    fill: $text-on-color-disabled;
+  }
+
+  .#{$prefix}--tabs--container
+    .#{$prefix}--tabs__nav-link:has(.#{$prefix}--tabs__nav-item--icon) {
+    inline-size: 100%;
+  }
+
+  .#{$prefix}--tabs--container .#{$prefix}--tabs__nav-item--icon {
+    margin-inline-start: auto;
+    padding-inline-start: $carbon--spacing-05;
+  }
+}
+
+@include exports('tabs-icon') {
+  @include tabs-icon;
+}
+
+/// Tab full-width styles
+/// @access private
+/// @group components
+@mixin tabs-full-width {
+  .#{$prefix}--tabs--full-width .#{$prefix}--tabs__nav {
+    width: 100%;
+  }
+
+  .#{$prefix}--tabs--full-width .#{$prefix}--tabs__nav-item {
+    flex: 1;
+  }
+
+  .#{$prefix}--tabs--full-width .#{$prefix}--tabs__nav-link {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@include exports('tabs-full-width') {
+  @include tabs-full-width;
+}
+
+/// Tab tall (secondary label) styles
+/// @access private
+/// @group components
+@mixin tabs-tall {
+  @include carbon--breakpoint(md) {
+    .#{$prefix}--tabs--tall.#{$prefix}--tabs--container {
+      min-height: 4rem;
+    }
+
+    .#{$prefix}--tabs--tall .#{$prefix}--tabs__nav-item {
+      min-height: 4rem;
+    }
+
+    .#{$prefix}--tabs--tall.#{$prefix}--tabs--container a.#{$prefix}--tabs__nav-link {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      height: 100%;
+    }
+  }
+
+  .#{$prefix}--tabs__nav-item-label-wrapper {
+    display: flex;
+    line-height: normal;
+  }
+
+  .#{$prefix}--tabs--container .#{$prefix}--tabs__nav-item-secondary-label {
+    @include carbon--type-style("caption-01");
+
+    min-height: 1rem;
+  }
+}
+
+@include exports('tabs-tall') {
+  @include tabs-tall;
+}
+
+/// Tab container panel background
+/// @access private
+/// @group components
+@mixin tabs-container-panel {
+  .#{$prefix}--tabs--container ~ .#{$prefix}--tab-content {
+    background-color: $ui-01;
+  }
+}
+
+@include exports('tabs-container-panel') {
+  @include tabs-container-panel;
+}
+
+/// Container type: remove link border on disabled tab hover
+/// Default tabs add a bottom border to the nav link on disabled hover; container
+/// tabs use a different visual treatment and should not show this border.
+/// @access private
+/// @group components
+@mixin tabs-container-disabled-hover {
+  .#{$prefix}--tabs--container
+    .#{$prefix}--tabs__nav-item--disabled:hover
+    .#{$prefix}--tabs__nav-link {
+    border-bottom: none;
+    border-block-end: none;
+  }
+}
+
+@include exports('tabs-container-disabled-hover') {
+  @include tabs-container-disabled-hover;
+}
+
+/// Container type: do not apply fixed 10rem width to nav links.
+/// Default tabs get width: 10rem at 42rem viewport from base Carbon styles
+/// (including :focus and :active); container tabs should size naturally.
+/// @access private
+/// @group components
+@mixin tabs-container-nav-link-width {
+  @media (min-width: 42rem) {
+    .#{$prefix}--tabs--container .#{$prefix}--tabs__nav-link,
+    .#{$prefix}--tabs--container .#{$prefix}--tabs__nav-link:focus,
+    .#{$prefix}--tabs--container .#{$prefix}--tabs__nav-link:active {
+      width: auto;
+    }
+  }
+}
+
+@include exports('tabs-container-nav-link-width') {
+  @include tabs-container-nav-link-width;
+}

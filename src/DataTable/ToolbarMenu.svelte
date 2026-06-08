@@ -1,22 +1,35 @@
 <script>
   /** @extends {"../OverflowMenu/OverflowMenu.svelte"} OverflowMenuProps */
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import Settings from "../icons/Settings.svelte";
   import OverflowMenu from "../OverflowMenu/OverflowMenu.svelte";
 
-  const ctx = getContext("Toolbar") ?? {};
+  const ctx = getContext("carbon:Toolbar") ?? {};
 
   let menuRef = null;
+  let lastVisible = false;
 
-  $: ctx.setOverflowVisible?.(menuRef != null);
+  $: {
+    const visible = menuRef != null;
+    if (visible !== lastVisible) {
+      lastVisible = visible;
+      ctx.setOverflowVisible?.(visible);
+    }
+  }
+
+  onMount(() => () => {
+    if (lastVisible) ctx.setOverflowVisible?.(false);
+  });
 </script>
 
 <OverflowMenu
   bind:menuRef
   icon={Settings}
   {...$$restProps}
-  class="bx--toolbar-action bx--overflow-menu {$$restProps.class}"
+  class={["bx--toolbar-action", "bx--overflow-menu", $$restProps.class]
+    .filter(Boolean)
+    .join(" ")}
   flipped
 >
   <slot />

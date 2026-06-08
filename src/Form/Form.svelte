@@ -1,10 +1,11 @@
 <script>
-  /** Obtain a reference to the form element */
+  /**
+   * Obtain a reference to the form element.
+   * @bindable readonly
+   */
   export let ref = null;
 </script>
 
-<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <form
   class:bx--form={true}
   bind:this={ref}

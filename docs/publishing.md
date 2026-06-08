@@ -35,7 +35,7 @@ Then update consumers from local file aliases to npm aliases:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2"
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.2.0"
   }
 }
 ```
@@ -55,7 +55,7 @@ Keep these files in every published package:
 - `README.md`
 
 Do not remove Carbon Svelte attribution. The source and type surface are derived
-from `carbon-components-svelte@0.89.4`, which is Apache-2.0 licensed.
+from `carbon-components-svelte@0.108.0`, which is Apache-2.0 licensed.
 
 ## Maintenance Checklist
 

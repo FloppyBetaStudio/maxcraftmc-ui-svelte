@@ -7,7 +7,7 @@
   $: attributes = {
     "aria-hidden": labelled ? undefined : true,
     role: labelled ? "img" : undefined,
-    focusable: Number($$props["tabindex"]) === 0 ? true : undefined,
+    focusable: Number($$props.tabindex) === 0 ? true : undefined,
   };
 </script>
 
@@ -21,6 +21,8 @@
   {...attributes}
   {...$$restProps}
 >
-  {#if title}<title>{title}</title>{/if}
+  {#if title}
+    <title>{title}</title>
+  {/if}
   <path d="M8 15H24V17H8z"></path>
 </svg>

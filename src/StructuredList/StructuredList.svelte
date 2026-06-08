@@ -1,11 +1,13 @@
 <script>
   /**
-   * @event {string} change
+   * @template {string} [Value=string]
+   * @event {Value} change
    */
 
   /**
-   * Specify the selected structured list row value
-   * @type {string}
+   * Specify the selected structured list row value.
+   * @type {Value | undefined}
+   * @bindable writable
    */
   export let selected = undefined;
 
@@ -18,21 +20,41 @@
   /** Set to `true` to use the selection variant */
   export let selection = false;
 
-  import { createEventDispatcher, setContext } from "svelte";
+  import { createEventDispatcher, onMount, setContext } from "svelte";
   import { writable } from "svelte/store";
 
   const dispatch = createEventDispatcher();
+  /**
+   * @type {import("svelte/store").Writable<Value | undefined>}
+   */
   const selectedValue = writable(selected);
 
-  setContext("StructuredListWrapper", {
+  let prevSelectedValue = selected;
+  let isInitialRender = true;
+
+  /**
+   * @type {(value: Value) => void}
+   */
+  const update = (value) => {
+    selectedValue.set(value);
+  };
+
+  setContext("carbon:StructuredListWrapper", {
     selectedValue,
-    update: (value) => {
-      selectedValue.set(value);
-    },
+    update,
+  });
+
+  onMount(() => {
+    isInitialRender = false;
   });
 
   $: selected = $selectedValue;
-  $: dispatch("change", $selectedValue);
+  $: {
+    if (!isInitialRender && prevSelectedValue !== $selectedValue) {
+      dispatch("change", $selectedValue);
+    }
+    prevSelectedValue = $selectedValue;
+  }
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->

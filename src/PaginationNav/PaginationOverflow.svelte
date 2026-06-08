@@ -27,15 +27,18 @@
         {value}
         class:bx--pagination-nav__page={true}
         class:bx--pagination-nav__page--select={true}
-        on:change={({ target }) => {
+        on:change={(event) => {
           value = "";
-          dispatch("select", { index: Number(target.value) });
+          dispatch("select", { index: Number(event.target.value) });
         }}
       >
         <option value="" hidden></option>
-        {#each Array.from({ length: count }, (_, i) => i) as i}
-          <option value={fromIndex + i + 1} data-page={fromIndex + i + 1}>
-            {fromIndex + i + 1}
+        {#each Array.from({ length: count }, (_, index) => index) as pageOffset}
+          <option
+            value={fromIndex + pageOffset + 1}
+            data-page={fromIndex + pageOffset + 1}
+          >
+            {fromIndex + pageOffset + 1}
           </option>
         {/each}
       </select>

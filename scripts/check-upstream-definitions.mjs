@@ -1,7 +1,8 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { relative } from "node:path";
 
-const roots = ["src", "types"];
+const roots = ["src", "css"];
+const ignoredFiles = new Set(["maxcraft.css"]);
 
 async function listFiles(rootUrl, baseUrl = rootUrl) {
   const entries = await readdir(rootUrl, { withFileTypes: true });
@@ -12,7 +13,8 @@ async function listFiles(rootUrl, baseUrl = rootUrl) {
     if (entry.isDirectory()) {
       files.push(...await listFiles(new URL(`${entry.name}/`, rootUrl), baseUrl));
     } else {
-      files.push(relative(new URL(".", baseUrl).pathname, entryUrl.pathname).replaceAll("\\", "/"));
+      const file = relative(new URL(".", baseUrl).pathname, entryUrl.pathname).replaceAll("\\", "/");
+      if (!ignoredFiles.has(file)) files.push(file);
     }
   }
 

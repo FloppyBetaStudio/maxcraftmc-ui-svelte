@@ -1,0 +1,26 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["svg"];
+
+type $Props = {
+  /**
+   * @default 16
+   */
+  size?: number;
+
+  /**
+   * @default undefined
+   */
+  title?: undefined;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type IconSearchProps = Omit<$RestProps, keyof $Props> & $Props;
+
+export default class IconSearch extends SvelteComponentTyped<
+  IconSearchProps,
+  Record<string, any>,
+  Record<string, never>
+> {}

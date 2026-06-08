@@ -1,6 +1,6 @@
 <script>
   /**
-   * Set the size of the input
+   * Set the size of the input.
    * @type {"sm" | "xl"}
    */
   export let size = undefined;
@@ -11,11 +11,19 @@
   /** Specify the input placeholder text */
   export let placeholder = "";
 
-  /** Specify the Regular Expression for the input value */
-  export let pattern = "\\d{1,2}\\/\\d{1,2}\\/\\d{4}";
+  /**
+   * Specify the Regular Expression for the input value.
+   * By default, the pattern is derived from the parent
+   * `DatePicker`'s `dateFormat` prop.
+   * @type {string}
+   */
+  export let pattern = undefined;
 
   /** Set to `true` to disable the input */
   export let disabled = false;
+
+  /** Set to `true` to mark the input as read-only */
+  export let readonly = false;
 
   /** Specify the helper text */
   export let helperText = "";
@@ -24,7 +32,7 @@
   export let iconDescription = "";
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /** Specify the label text */
   export let labelText = "";
@@ -38,30 +46,37 @@
   /** Specify the invalid state text */
   export let invalidText = "";
 
-  /** Set to `true` to indicate an warning state */
+  /** Set to `true` to indicate a warning state */
   export let warn = false;
 
   /** Specify the warning state text */
   export let warnText = "";
 
   /**
-   * Set a name for the input element
+   * Set a name for the input element.
    * @type {string}
    */
   export let name = undefined;
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
   import { getContext } from "svelte";
   import Calendar from "../icons/Calendar.svelte";
-  import WarningFilled from "../icons/WarningFilled.svelte";
   import WarningAltFilled from "../icons/WarningAltFilled.svelte";
+  import WarningFilled from "../icons/WarningFilled.svelte";
+
+  const REGEX_SPECIAL_CHARS = /[/\\^$*+?.()|[\]{}]/g;
 
   const {
     range,
     add,
+    setReadonly,
     hasCalendar,
+    dateFormat,
     declareRef,
     inputIds,
     updateValue,
@@ -71,43 +86,78 @@
     inputValue,
     inputValueFrom,
     inputValueTo,
-  } = getContext("DatePicker");
+  } = getContext("carbon:DatePicker");
+
+  const dateFormatTokens = {
+    d: "\\d{1,2}",
+    j: "\\d{1,2}",
+    m: "\\d{1,2}",
+    n: "\\d{1,2}",
+    Y: "\\d{4}",
+    y: "\\d{2}",
+    F: "\\w+",
+    M: "\\w+",
+    D: "\\w+",
+    l: "\\w+",
+  };
+
+  function dateFormatToPattern(fmt) {
+    let result = "";
+    for (let i = 0; i < fmt.length; i++) {
+      const ch = fmt[i];
+      if (ch === "\\" && i + 1 < fmt.length) {
+        result += fmt[++i].replace(REGEX_SPECIAL_CHARS, "\\$&");
+      } else if (dateFormatTokens[ch]) {
+        result += dateFormatTokens[ch];
+      } else {
+        result += ch.replace(REGEX_SPECIAL_CHARS, "\\$&");
+      }
+    }
+    return result;
+  }
 
   add({ id, labelText });
 
+  $: actualPattern = pattern ?? dateFormatToPattern($dateFormat ?? "m/d/Y");
   $: if (ref) declareRef({ id, ref });
+  $: setReadonly(id, readonly);
+  // Invalid/warn states are suppressed when the input is disabled or read-only.
+  $: showInvalid = invalid && !disabled && !readonly;
+  $: showWarn = warn && !invalid && !disabled && !readonly;
 </script>
 
 <div
   class:bx--date-picker-container={true}
   class:bx--date-picker--nolabel={!labelText}
 >
-  {#if labelText || $$slots.labelText}
+  {#if labelText || $$slots.labelChildren}
     <label
       for={id}
       class:bx--label={true}
       class:bx--visually-hidden={hideLabel}
       class:bx--label--disabled={disabled}
+      class:bx--label--readonly={readonly}
     >
-      <slot name="labelText">
-        {labelText}
-      </slot>
+      <slot name="labelChildren"> {labelText} </slot>
     </label>
   {/if}
   <div
     class:bx--date-picker-input__wrapper={true}
-    class:bx--date-picker-input__wrapper--invalid={invalid}
-    class:bx--date-picker-input__wrapper--warn={warn}
+    class:bx--date-picker-input__wrapper--invalid={showInvalid}
+    class:bx--date-picker-input__wrapper--warn={showWarn}
+    class:bx--date-picker-input__wrapper--readonly={readonly}
+    class:bx--date-picker-input__wrapper--disabled={disabled}
   >
     <input
       bind:this={ref}
-      data-invalid={invalid || undefined}
+      data-invalid={showInvalid || undefined}
       {id}
       {name}
       {placeholder}
       {type}
-      {pattern}
+      pattern={actualPattern}
       {disabled}
+      {readonly}
       {...$$restProps}
       value={$range
         ? $inputIds.indexOf(id) === 0
@@ -115,40 +165,41 @@
           : $inputValueTo
         : $inputValue}
       class:bx--date-picker__input={true}
-      class:bx--date-picker__input--invalid={invalid}
+      class:bx--date-picker__input--invalid={showInvalid}
       class:bx--date-picker__input--sm={size === "sm"}
       class:bx--date-picker__input--xl={size === "xl"}
       on:input
-      on:input={({ target }) => {
-        updateValue({ type: "input", value: target.value });
+      on:input={(event) => {
+        updateValue({ type: "input", value: event.target.value });
       }}
-      on:change={({ target }) => {
-        updateValue({ type: "change", value: target.value });
+      on:change={(event) => {
+        updateValue({ type: "change", value: event.target.value });
       }}
       on:keydown
-      on:keydown={({ key }) => {
-        if (key === "ArrowDown") {
+      on:keydown={(event) => {
+        if (!readonly && event.key === "ArrowDown") {
           focusCalendar();
         }
       }}
       on:keyup
+      on:focus
       on:blur
-      on:blur={({ relatedTarget }) => {
-        blurInput(relatedTarget);
+      on:blur={(event) => {
+        blurInput(event.relatedTarget);
       }}
       on:paste
-    />
-    {#if invalid}
+    >
+    {#if showInvalid}
       <WarningFilled
         class="bx--date-picker__icon bx--date-picker__icon--invalid"
       />
     {/if}
-    {#if !invalid && warn}
+    {#if showWarn}
       <WarningAltFilled
         class="bx--date-picker__icon bx--date-picker__icon--warn"
       />
     {/if}
-    {#if $hasCalendar && !invalid && !warn}
+    {#if $hasCalendar && !showInvalid && !showWarn}
       <Calendar
         class="bx--date-picker__icon"
         aria-label={iconDescription}
@@ -156,13 +207,13 @@
       />
     {/if}
   </div>
-  {#if invalid}
+  {#if showInvalid}
     <div class:bx--form-requirement={true}>{invalidText}</div>
   {/if}
-  {#if !invalid && warn}
+  {#if showWarn}
     <div class:bx--form-requirement={true}>{warnText}</div>
   {/if}
-  {#if !invalid && !warn && helperText}
+  {#if !showInvalid && !showWarn && helperText}
     <div
       class:bx--form__helper-text={true}
       class:bx--form__helper-text--disabled={disabled}

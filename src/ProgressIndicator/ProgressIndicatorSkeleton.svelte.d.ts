@@ -1,0 +1,40 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["ul"];
+
+type $Props = {
+  /**
+   * Set to `true` to use the vertical variant
+   * @default false
+   */
+  vertical?: boolean;
+
+  /**
+   * Set to `true` to specify whether the progress steps should be split equally in size in the div
+   * @default false
+   */
+  spaceEqually?: boolean;
+
+  /**
+   * Specify the number of steps to render
+   * @default 4
+   */
+  count?: number;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type ProgressIndicatorSkeletonProps = Omit<$RestProps, keyof $Props> &
+  $Props;
+
+export default class ProgressIndicatorSkeleton extends SvelteComponentTyped<
+  ProgressIndicatorSkeletonProps,
+  {
+    click: WindowEventMap["click"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+  },
+  Record<string, never>
+> {}

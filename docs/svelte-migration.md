@@ -1,6 +1,6 @@
 # Svelte Migration Guide
 
-This guide is for apps already using `carbon-components-svelte@0.89.4`.
+This guide is for apps already using `carbon-components-svelte@0.108.0`.
 
 ## 1. Replace The Dependency
 
@@ -9,7 +9,7 @@ Published package:
 ```json
 {
   "dependencies": {
-    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.1.2",
+    "carbon-components-svelte": "npm:@ifloppy/maxcraftmc-ui-svelte@0.2.0",
     "carbon-icons-svelte": "^13.5.0"
   }
 }

@@ -1,5 +1,8 @@
 <script>
-  /** Specify the current step index */
+  /**
+   * Specify the current step index.
+   * @bindable writable
+   */
   export let currentIndex = 0;
 
   /** Set to `true` to use the vertical variant */
@@ -12,46 +15,81 @@
   export let preventChangeOnClick = false;
 
   import { createEventDispatcher, setContext } from "svelte";
-  import { writable, derived } from "svelte/store";
+  import { derived, writable } from "svelte/store";
+  import { keyBy } from "../utils/keyBy.js";
 
   const dispatch = createEventDispatcher();
+  /**
+   * @type {import("svelte/store").Writable<ReadonlyArray<{ id: string; complete: boolean; disabled: boolean; index: number; current: boolean }>>}
+   */
   const steps = writable([]);
-  const stepsById = derived(steps, (steps) =>
-    steps.reduce((a, c) => ({ ...a, [c.id]: c }), {}),
-  );
+  /**
+   * @type {import("svelte/store").Readable<Record<string, { id: string; complete: boolean; disabled: boolean; index: number; current: boolean }>>}
+   */
+  const stepsById = derived(steps, (steps) => keyBy(steps));
   const preventChangeOnClickStore = writable(preventChangeOnClick);
 
-  setContext("ProgressIndicator", {
+  /**
+   * @type {import("svelte/store").Readable<boolean>}
+   */
+  const preventChangeOnClickReadable = {
+    subscribe: preventChangeOnClickStore.subscribe,
+  };
+
+  /**
+   * @type {(step: { id: string; complete: boolean; disabled: boolean }) => void}
+   */
+  const add = (step) => {
+    steps.update((_) => {
+      if (step.id in $stepsById) {
+        return _.map((_step) => {
+          if (_step.id === step.id) return { ..._step, ...step };
+          return _step;
+        });
+      }
+
+      return [
+        ..._,
+        {
+          ...step,
+          index: _.length,
+          current: _.length === currentIndex,
+          complete: step.complete,
+        },
+      ];
+    });
+  };
+
+  /**
+   * @type {(id: string) => void}
+   */
+  const remove = (id) => {
+    steps.update((_) =>
+      _.filter((step) => step.id !== id).map((step, i) => ({
+        ...step,
+        index: i,
+      })),
+    );
+  };
+
+  /**
+   * @type {(index: number) => void}
+   */
+  const change = (index) => {
+    if (preventChangeOnClick) return;
+    currentIndex = index;
+
+    /** @event {number} change */
+    dispatch("change", index);
+  };
+
+  setContext("carbon:ProgressIndicator", {
     steps,
     stepsById,
-    preventChangeOnClick: { subscribe: preventChangeOnClickStore.subscribe },
-    add: (step) => {
-      steps.update((_) => {
-        if (step.id in $stepsById) {
-          return _.map((_step) => {
-            if (_step.id === step.id) return { ..._step, ...step };
-            return _step;
-          });
-        }
-
-        return [
-          ..._,
-          {
-            ...step,
-            index: _.length,
-            current: _.length === currentIndex,
-            complete: step.complete,
-          },
-        ];
-      });
-    },
-    change: (index) => {
-      if (preventChangeOnClick) return;
-      currentIndex = index;
-
-      /** @event {number} change */
-      dispatch("change", index);
-    },
+    preventChangeOnClick: preventChangeOnClickReadable,
+    add,
+    remove,
+    change,
   });
 
   $: steps.update((_) =>

@@ -2,6 +2,9 @@
   /** Set to `true` to use the vertical variant */
   export let vertical = false;
 
+  /** Set to `true` to specify whether the progress steps should be split equally in size in the div */
+  export let spaceEqually = false;
+
   /** Specify the number of steps to render */
   export let count = 4;
 </script>
@@ -11,6 +14,7 @@
 <ul
   class:bx--progress={true}
   class:bx--progress--vertical={vertical}
+  class:bx--progress--space-equal={spaceEqually && !vertical}
   class:bx--skeleton={true}
   {...$$restProps}
   on:click
@@ -18,7 +22,7 @@
   on:mouseenter
   on:mouseleave
 >
-  {#each Array.from({ length: count }, (_, i) => i) as item, i (item)}
+  {#each Array.from({ length: count }, (_, i) => i) as item, index (item)}
     <li
       class:bx--progress-step={true}
       class:bx--progress-step--incomplete={true}

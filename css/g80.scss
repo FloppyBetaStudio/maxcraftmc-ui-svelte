@@ -22,6 +22,22 @@ $css--plex: true;
 @import "carbon-components/src/components/notification/inline-notification";
 @import "carbon-components/src/components/notification/toast-notification";
 @import "./popover";
+@import "./checkbox-readonly";
+@import "./combobox-readonly";
+@import "./dropdown-readonly";
+@import "./multiselect-readonly";
+@import "./radiobutton-readonly";
+@import "./select-readonly";
+@import "./toggle-readonly";
+@import "./text-area-readonly";
+@import "./text-area-warn";
+@import "./slider";
+@import "./stack";
+@import "./contained-list";
+@import "./number-input";
+@import "./ui-shell";
+@import "./tabs";
+@import "./tooltip";
 
 @import "carbon-components/scss/globals/scss/_css--reset";
 @import "carbon-components/scss/globals/scss/_css--font-face";
@@ -32,3 +48,13 @@ $css--plex: true;
 // Import all component styles
 @import "carbon-components/scss/globals/scss/styles";
 
+// Custom component overrides (must come after Carbon styles)
+@import "./multiselect";
+@import "./treeview";
+@import "./selectable-tag";
+@import "./tag";
+@import "./datepicker";
+@import "./time-picker";
+@import "./copy-button-portal";
+@import "./overflow-menu";
+@import "./breadcrumb";

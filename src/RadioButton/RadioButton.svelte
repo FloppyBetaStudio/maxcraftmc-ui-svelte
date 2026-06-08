@@ -1,11 +1,18 @@
 <script>
   /**
-   * Specify the value of the radio button
-   * @type {string | number}
+   * @template {string | number} [Value=string | number]
+   */
+
+  /**
+   * Specify the value of the radio button.
+   * @type {Value}
    */
   export let value = "";
 
-  /** Set to `true` to check the radio button */
+  /**
+   * Set to `true` to check the radio button.
+   * @bindable writable
+   */
   export let checked = false;
 
   /** Set to `true` to disable the radio button */
@@ -15,7 +22,7 @@
   export let required = false;
 
   /**
-   * Specify the label position
+   * Specify the label position.
    * @type {"right" | "left"}
    */
   export let labelPosition = "right";
@@ -27,33 +34,122 @@
   export let hideLabel = false;
 
   /** Set an id for the input element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
-   * Specify a name attribute for the radio button input
+   * Specify a name attribute for the radio button input.
+   * When multiple standalone RadioButton components share the same `name`,
+   * they form an implicit group and their `checked` state will be synchronized.
    * @type {string}
    */
   export let name = undefined;
 
-  /** Obtain a reference to the input HTML element */
+  /**
+   * Obtain a reference to the input HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { readable } from "svelte/store";
+  import {
+    registerRadioButton,
+    updateGroupSelection,
+  } from "./RadioButtonRegistry.js";
 
-  const { add, update, selectedValue, groupName, groupRequired } = getContext(
-    "RadioButtonGroup",
-  ) ?? {
+  const ctx = getContext("carbon:RadioButtonGroup");
+
+  const {
+    add,
+    update,
+    selectedValue,
+    groupName,
+    groupRequired,
+    readonly,
+    helperId,
+  } = ctx ?? {
     groupName: readable(undefined),
     groupRequired: readable(undefined),
     selectedValue: readable(checked ? value : undefined),
+    readonly: readable(false),
+    helperId: readable(undefined),
   };
 
-  if (add) {
-    add({ id, checked, disabled, value });
+  // Track if we're in standalone mode (no RadioButtonGroup context)
+  const isStandalone = !ctx;
+
+  // Unique key for this component instance (used for registry identity)
+  // Using an object reference guarantees uniqueness across all instances
+  const instanceKey = {};
+
+  // Registry state for standalone mode with name
+  /** @type {import("svelte/store").Writable<{} | undefined> | null} */
+  let registryStore = null;
+  /** @type {(() => void) | null} */
+  let unregister = null;
+  /** @type {(() => void) | null} */
+  let registryUnsubscribe = null;
+  /** @type {string | undefined} */
+  let previousName = undefined;
+
+  /**
+   * Initialize registry for standalone mode with name.
+   */
+  function initRegistry(radioName) {
+    // Clean up previous registration if any
+    cleanupRegistry();
+
+    if (isStandalone && radioName) {
+      const registration = registerRadioButton(radioName, instanceKey, checked);
+      registryStore = registration.selectedKey;
+      unregister = registration.unregister;
+
+      // Subscribe to uncheck this radio when a sibling is selected.
+      // Only set checked=false when another instance is selected, not checked=true for self.
+      // This allows parent components (like DataTable) to control the checked state.
+      registryUnsubscribe = registryStore.subscribe((selectedKey) => {
+        if (selectedKey !== undefined && selectedKey !== instanceKey) {
+          checked = false;
+        }
+      });
+
+      previousName = radioName;
+    }
   }
 
-  $: checked = $selectedValue === value;
+  function cleanupRegistry() {
+    if (registryUnsubscribe) {
+      registryUnsubscribe();
+      registryUnsubscribe = null;
+    }
+    if (unregister) {
+      unregister();
+      unregister = null;
+    }
+    registryStore = null;
+    previousName = undefined;
+  }
+
+  // Handle name prop changes reactively
+  $: if (isStandalone && name !== previousName) {
+    initRegistry(name);
+  }
+
+  if (add) {
+    add({ checked, value });
+  }
+
+  // Only sync checked when inside RadioButtonGroup.
+  // This allows standalone `RadioButton` usage.
+  $: if (add) {
+    checked = $selectedValue === value;
+  }
+
+  onMount(() => {
+    return () => {
+      cleanupRegistry();
+    };
+  });
 </script>
 
 <div
@@ -70,23 +166,37 @@
     {disabled}
     required={$groupRequired ?? required}
     {value}
+    aria-describedby={$helperId}
     class:bx--radio-button={true}
     on:focus
     on:blur
-    on:change
-    on:change={() => {
+    on:click={(event) => {
+      if ($readonly) event.preventDefault();
+    }}
+    on:change={(event) => {
+      if ($readonly) {
+        event.stopImmediatePropagation();
+        return;
+      }
       if (update) {
+        // Inside RadioButtonGroup - use context
         update(value);
+      } else if (name && registryStore) {
+        // Standalone with name - update local checked and notify siblings via registry
+        checked = event.currentTarget.checked;
+        updateGroupSelection(name, instanceKey);
+      } else {
+        // Standalone without name - just update local checked
+        checked = event.currentTarget.checked;
       }
     }}
-  />
+    on:change
+  >
   <label class:bx--radio-button__label={true} for={id}>
     <span class:bx--radio-button__appearance={true}></span>
-    {#if labelText || $$slots.labelText}
+    {#if labelText || $$slots.labelChildren}
       <span class:bx--visually-hidden={hideLabel}>
-        <slot name="labelText">
-          {labelText}
-        </slot>
+        <slot name="labelChildren"> {labelText} </slot>
       </span>
     {/if}
   </label>

@@ -1,18 +1,22 @@
 <script>
   /**
-   * Set the type of notification
+   * @template [Icon=any]
+   */
+
+  /**
+   * Set the type of notification.
    * @type {"toast" | "inline"}
    */
   export let notificationType = "toast";
 
   /**
-   * Specify the icon to render
-   * @type {any}
+   * Specify the icon to render.
+   * @type {Icon}
    */
-  export let icon = Close;
+  export let icon = /** @type {Icon} */ (Close);
 
   /**
-   * Specify the title of the icon
+   * Specify the title of the icon.
    * @type {string}
    */
   export let title = undefined;
@@ -21,6 +25,13 @@
   export let iconDescription = "Close icon";
 
   import Close from "../icons/Close.svelte";
+
+  $: iconClass = [
+    notificationType === "toast" && "bx--toast-notification__close-icon",
+    notificationType === "inline" && "bx--inline-notification__close-icon",
+  ]
+    .filter(Boolean)
+    .join(" ");
 </script>
 
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -36,12 +47,5 @@
   on:mouseenter
   on:mouseleave
 >
-  <svelte:component
-    this={icon}
-    size={20}
-    {title}
-    class="{notificationType === 'toast' &&
-      'bx--toast-notification__close-icon'} {notificationType === 'inline' &&
-      'bx--inline-notification__close-icon'}"
-  />
+  <svelte:component this={icon} size={20} {title} class={iconClass} />
 </button>

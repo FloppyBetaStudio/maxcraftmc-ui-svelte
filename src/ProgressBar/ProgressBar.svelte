@@ -1,6 +1,6 @@
 <script>
   /**
-   * Specify the current value
+   * Specify the current value.
    * @type {number}
    */
   export let value = undefined;
@@ -9,19 +9,19 @@
   export let max = 100;
 
   /**
-   * Specify the kind of progress bar
+   * Specify the kind of progress bar.
    * @type {"default" | "inline" | "indented"}
    */
   export let kind = "default";
 
   /**
-   * Specify the status
+   * Specify the status.
    * @type {"active" | "finished" | "error"}
    */
   export let status = "active";
 
   /**
-   * Specify the size
+   * Specify the size.
    * @type {"sm" | "md"}
    */
   export let size = "md";
@@ -36,7 +36,7 @@
   export let helperText = "";
 
   /** Set an id for the progress bar element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   import CheckmarkFilled from "../icons/CheckmarkFilled.svelte";
   import ErrorFilled from "../icons/ErrorFilled.svelte";
@@ -46,7 +46,7 @@
     finished: CheckmarkFilled,
   };
 
-  let helperId = "ccs-" + Math.random().toString(36);
+  let helperId = `ccs-${Math.random().toString(36)}`;
 
   $: indeterminate = value === undefined && status === "active";
   let capped;
@@ -72,26 +72,25 @@
   class:bx--progress-bar--finished={status === "finished"}
   {...$$restProps}
 >
-  <label
-    for={id}
+  <div
+    id="{id}-label"
     class:bx--progress-bar__label={true}
     class:bx--visually-hidden={hideLabel}
   >
-    <slot name="labelText">
-      {labelText}
-    </slot>
+    <slot name="labelChildren"> {labelText} </slot>
     {#if status === "error" || status === "finished"}
       <svelte:component
         this={statusIcons[status]}
         class="bx--progress-bar__status-icon"
       />
     {/if}
-  </label>
+  </div>
   <div
     role="progressbar"
     {id}
     class:bx--progress-bar__track={true}
     aria-busy={status === "active"}
+    aria-labelledby="{id}-label"
     aria-valuemin={indeterminate ? undefined : 0}
     aria-valuemax={indeterminate ? undefined : max}
     aria-valuenow={indeterminate ? undefined : capped}

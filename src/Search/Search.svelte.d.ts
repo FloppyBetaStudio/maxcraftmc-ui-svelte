@@ -1,0 +1,133 @@
+import { SvelteComponentTyped } from "svelte";
+import type { SvelteHTMLElements } from "svelte/elements";
+
+type $RestProps = SvelteHTMLElements["input"];
+
+type $Props<T = any, Icon = any> = {
+  /**
+   * Specify the value of the search input.
+   * @default ""
+   */
+  value?: T;
+
+  /**
+   * Specify the size of the search input.
+   * @default "xl"
+   */
+  size?: "sm" | "lg" | "xl";
+
+  /**
+   * Specify the class name passed to the outer div element
+   * @default ""
+   */
+  searchClass?: string;
+
+  /**
+   * Set to `true` to display the skeleton state
+   * @default false
+   */
+  skeleton?: boolean;
+
+  /**
+   * Set to `true` to enable the light variant
+   * @default false
+   */
+  light?: boolean;
+
+  /**
+   * Set to `true` to disable the search input
+   * @default false
+   */
+  disabled?: boolean;
+
+  /**
+   * Set to `true` to enable the expandable variant
+   * @default false
+   */
+  expandable?: boolean;
+
+  /**
+   * Set to `true to expand the search input.
+   * @default false
+   */
+  expanded?: boolean;
+
+  /**
+   * Specify the `placeholder` attribute of the search input
+   * @default "Search..."
+   */
+  placeholder?: string;
+
+  /**
+   * Specify the `autocomplete` attribute.
+   * @default "off"
+   */
+  autocomplete?: "on" | "off";
+
+  /**
+   * Set to `true` to auto focus the search element
+   * @default false
+   */
+  autofocus?: boolean;
+
+  /**
+   * Specify the close button label text
+   * @default "Clear search input"
+   */
+  closeButtonLabelText?: string;
+
+  /**
+   * Specify the label text
+   * @default ""
+   */
+  labelText?: string;
+
+  /**
+   * Specify the icon to render.
+   * @default IconSearch
+   */
+  icon?: Icon;
+
+  /**
+   * Set an id for the input element
+   * @default `ccs-${Math.random().toString(36)}`
+   */
+  id?: string;
+
+  /**
+   * Obtain a reference to the input HTML element.
+   * @default null
+   */
+  ref?: null | HTMLInputElement;
+
+  labelChildren?: (this: void) => void;
+
+  [key: `data-${string}`]: unknown;
+};
+
+export type SearchProps<T = any, Icon = any> = Omit<
+  $RestProps,
+  keyof $Props<T, Icon>
+> &
+  $Props<T, Icon>;
+
+export default class Search<T = any, Icon = any> extends SvelteComponentTyped<
+  SearchProps<T, Icon>,
+  {
+    blur: WindowEventMap["blur"];
+    change: WindowEventMap["change"];
+    clear: CustomEvent<null>;
+    click: WindowEventMap["click"];
+    collapse: CustomEvent<null>;
+    expand: CustomEvent<null>;
+    focus: WindowEventMap["focus"];
+    input: WindowEventMap["input"];
+    keydown: WindowEventMap["keydown"];
+    keyup: WindowEventMap["keyup"];
+    mouseenter: WindowEventMap["mouseenter"];
+    mouseleave: WindowEventMap["mouseleave"];
+    mouseover: WindowEventMap["mouseover"];
+    paste: WindowEventMap["paste"];
+  },
+  { labelChildren: Record<string, never> }
+> {}

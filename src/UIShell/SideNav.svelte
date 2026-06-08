@@ -12,12 +12,15 @@
   export let rail = false;
 
   /**
-   * Specify the ARIA label for the nav
+   * Specify the ARIA label for the nav.
    * @type {string}
    */
   export let ariaLabel = undefined;
 
-  /** Set to `true` to toggle the expanded state */
+  /**
+   * Set to `true` to toggle the expanded state.
+   * @bindable writable
+   */
   export let isOpen = false;
 
   /**
@@ -27,28 +30,74 @@
    * - medium: 672
    * - large: 1056
    * - x-large: 1312
-   * - max: 1584
+   * - max: 1584.
    */
   export let expansionBreakpoint = 1056;
 
-  import { onMount, createEventDispatcher } from "svelte";
+  /**
+   * Set to `"classic"` for the mixed UI Shell theme (White side nav).
+   * Use with `Header` `theme="classic"` (Gray 100 header).
+   * Requires `carbon-components-svelte/css/all.css`.
+   * @type {"classic" | undefined}
+   */
+  export let theme = undefined;
+
+  import { createEventDispatcher, onMount } from "svelte";
   import {
-    shouldRenderHamburgerMenu,
+    acquireBodyScrollLock,
+    releaseBodyScrollLock,
+  } from "../utils/bodyScrollLock.js";
+  import {
     isSideNavCollapsed,
+    isSideNavMobile,
     isSideNavRail,
-  } from "./navStore";
+    shouldRenderHamburgerMenu,
+  } from "./nav-store";
 
   const dispatch = createEventDispatcher();
 
   let winWidth = undefined;
+  let prevIsOpen = isOpen;
 
-  $: dispatch(isOpen ? "open" : "close");
-  $: $isSideNavCollapsed = !isOpen;
+  $: if (prevIsOpen !== isOpen) {
+    dispatch(isOpen ? "open" : "close");
+    prevIsOpen = isOpen;
+  }
+  // Only update the collapsed store after hydration (winWidth is known).
+  // During SSR, defer to Carbon CSS media queries to handle visibility
+  // to avoid a flash when JS sets isOpen after hydration.
+  $: if (winWidth !== undefined) {
+    $isSideNavCollapsed = !isOpen;
+  }
   $: $isSideNavRail = rail;
+  $: $isSideNavMobile =
+    winWidth !== undefined && winWidth < expansionBreakpoint && !fixed;
+
+  // Lock body scroll when SideNav is open on mobile (below breakpoint).
+  // Only applies to non-fixed, non-rail variants. Uses the shared ref-counted
+  // lock so a Modal opened concurrently is not affected by this toggle.
+  let holdsBodyLock = false;
+  $: {
+    const shouldLockScroll = isOpen && !fixed && !rail && $isSideNavMobile;
+    if (shouldLockScroll && !holdsBodyLock) {
+      holdsBodyLock = true;
+      acquireBodyScrollLock();
+    } else if (!shouldLockScroll && holdsBodyLock) {
+      holdsBodyLock = false;
+      releaseBodyScrollLock();
+    }
+  }
 
   onMount(() => {
-    shouldRenderHamburgerMenu.set(true);
-    return () => shouldRenderHamburgerMenu.set(false);
+    shouldRenderHamburgerMenu.set(!fixed);
+    return () => {
+      shouldRenderHamburgerMenu.set(false);
+      isSideNavMobile.set(false);
+      if (holdsBodyLock) {
+        holdsBodyLock = false;
+        releaseBodyScrollLock();
+      }
+    };
   });
 </script>
 
@@ -63,8 +112,8 @@
       isOpen = false;
     }}
     class:bx--side-nav__overlay={true}
+    class:bx--side-nav__overlay--mobile={$isSideNavMobile}
     class:bx--side-nav__overlay-active={isOpen}
-    style:z-index={isOpen ? 6000 : undefined}
   ></div>
 {/if}
 <nav
@@ -76,8 +125,12 @@
   class:bx--side-nav--expanded={rail && winWidth >= expansionBreakpoint
     ? false
     : isOpen}
-  class:bx--side-nav--collapsed={!isOpen && !rail}
+  class:bx--side-nav--collapsed={winWidth !== undefined && !isOpen && !rail}
   class:bx--side-nav--rail={rail}
+  class:bx--side-nav--ui-shell-classic={theme === "classic"}
+  style:visibility={winWidth !== undefined && !isOpen && !rail
+    ? "hidden"
+    : undefined}
   {...$$restProps}
 >
   <slot />

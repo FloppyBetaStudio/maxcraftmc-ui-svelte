@@ -4,28 +4,31 @@
    */
 
   /**
-   * Specify the date picker type
+   * Specify the date picker type.
    * @type {"simple" | "single" | "range"}
    */
   export let datePickerType = "simple";
 
   /**
-   * Specify the date picker input value
+   * Specify the date picker input value.
    * @type {number | string}
+   * @bindable writable
    */
   export let value = "";
 
   /**
-   * Specify the date picker start date value (from)
-   * Only works with the "range" date picker type
+   * Specify the date picker start date value (from).
+   * Only works with the "range" date picker type.
    * @type {string}
+   * @bindable writable
    */
   export let valueFrom = "";
 
   /**
-   * Specify the date picker end date value (to)
-   * Only works with the "range" date picker type
+   * Specify the date picker end date value (to).
+   * Only works with the "range" date picker type.
    * @type {string}
+   * @bindable writable
    */
   export let valueTo = "";
 
@@ -33,19 +36,19 @@
   export let dateFormat = "m/d/Y";
 
   /**
-   * Specify the maximum date
+   * Specify the maximum date.
    * @type {null | string | Date}
    */
   export let maxDate = null;
 
   /**
-   * Specify the minimum date
+   * Specify the minimum date.
    * @type {null | string | Date}
    */
   export let minDate = null;
 
   /**
-   * Specify the locale
+   * Specify the locale.
    * @type {import("flatpickr/dist/types/locale").CustomLocale | import("flatpickr/dist/types/locale").key}
    */
   export let locale = "en";
@@ -56,8 +59,20 @@
   /** Set to `true` to enable the light variant */
   export let light = false;
 
+  /**
+   * Set to `true` to render the calendar in a portal to prevent clipping.
+   * When inside a Modal, defaults to `true` unless explicitly set to `false`.
+   *
+   * When the date picker is inside a native `<dialog>` (opened with
+   * `showModal()`) or an open `[popover]` element, the calendar auto-mounts
+   * into that top-layer ancestor and uses `position: fixed` so it renders
+   * above the backdrop instead of behind it.
+   * @type {boolean | undefined}
+   */
+  export let portalMenu = undefined;
+
   /** Set an id for the date picker element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
   /**
    * Override the options passed to the Flatpickr instance.
@@ -66,101 +81,253 @@
    */
   export let flatpickrProps = { static: true };
 
+  /**
+   * Bind to the Flatpickr calendar instance for programmatic control.
+   * Only available when `datePickerType` is `"single"` or `"range"`.
+   * @see https://flatpickr.js.org/instance-methods-properties-elements/
+   * @type {import("flatpickr/dist/types/instance").Instance | null}
+   * @bindable readonly
+   */
+  export let calendar = null;
+
   import {
-    createEventDispatcher,
-    setContext,
     afterUpdate,
+    createEventDispatcher,
+    getContext,
     onMount,
+    setContext,
   } from "svelte";
-  import { writable, derived } from "svelte/store";
-  import { createCalendar } from "./createCalendar";
+  import { derived, writable } from "svelte/store";
+  import { createCalendar, resolveLocale } from "./createCalendar";
+  import {
+    getTopLayerAncestor,
+    isEventTargetInsidePortaledCalendar,
+    positionFlatpickrCalendarFixed,
+  } from "./datePickerTopLayer";
 
   const dispatch = createEventDispatcher();
+  const insideModal = getContext("carbon:Modal");
+
+  $: effectivePortalMenu =
+    portalMenu === undefined ? !!insideModal : portalMenu;
+
   const inputs = writable([]);
+  /**
+   * @type {import("svelte/store").Readable<ReadonlyArray<string>>}
+   */
   const inputIds = derived(inputs, (_) => _.map(({ id }) => id));
   const labelTextEmpty = derived(
     inputs,
     (_) => _.filter(({ labelText }) => !!labelText).length === 0,
   );
+  const readonlyAny = derived(inputs, (_) =>
+    _.some(({ readonly }) => readonly),
+  );
+  /**
+   * @type {import("svelte/store").Writable<number | string>}
+   */
   const inputValue = writable(value);
+  /**
+   * @type {import("svelte/store").Writable<string>}
+   */
   const inputValueFrom = writable(valueFrom);
+  /**
+   * @type {import("svelte/store").Writable<string>}
+   */
   const inputValueTo = writable(valueTo);
   const mode = writable(datePickerType);
+  const dateFormatStore = writable(dateFormat);
+  /**
+   * @type {import("svelte/store").Readable<boolean>}
+   */
   const range = derived(mode, (_) => _ === "range");
+  /**
+   * @type {import("svelte/store").Readable<boolean>}
+   */
   const hasCalendar = derived(mode, (_) => _ === "single" || _ === "range");
 
-  let calendar = null;
   let datePickerRef = null;
   let inputRef = null;
   let inputRefTo = null;
+  let prevValue = value;
+  let prevValueFrom = valueFrom;
+  let prevValueTo = valueTo;
+  let lastAppliedOptions = {};
+  let calendarUsesFixedPositioning = false;
+  let onCalendarReposition = null;
 
-  setContext("DatePicker", {
+  function attachFixedRepositionListeners() {
+    if (!calendar || onCalendarReposition) return;
+    onCalendarReposition = () => positionFlatpickrCalendarFixed(calendar);
+    window.addEventListener("scroll", onCalendarReposition, true);
+    window.addEventListener("resize", onCalendarReposition);
+  }
+
+  function detachFixedRepositionListeners() {
+    if (!onCalendarReposition) return;
+    window.removeEventListener("scroll", onCalendarReposition, true);
+    window.removeEventListener("resize", onCalendarReposition);
+    onCalendarReposition = null;
+  }
+
+  /**
+   * @type {(data: { id: string; labelText: string }) => void}
+   */
+  const add = (data) => {
+    inputs.update((_) => [..._, { readonly: false, ...data }]);
+  };
+
+  /**
+   * @type {(id: string, readonly: boolean) => void}
+   */
+  const setReadonly = (id, readonly) => {
+    inputs.update((_) =>
+      _.map((input) => (input.id === id ? { ...input, readonly } : input)),
+    );
+  };
+
+  /**
+   * @type {(data: { id: string; ref: HTMLInputElement }) => void}
+   */
+  const declareRef = ({ id, ref }) => {
+    if ($inputIds.indexOf(id) === 0) {
+      inputRef = ref;
+    } else {
+      inputRefTo = ref;
+    }
+  };
+
+  /**
+   * @type {(data: { type: "input" | "change"; value: string }) => void}
+   */
+  const updateValue = ({ type, value }) => {
+    if ((!calendar && type === "input") || type === "change") {
+      inputValue.set(value);
+    }
+
+    if (type === "change") {
+      if (calendar) {
+        const detail = { selectedDates: calendar.selectedDates || [] };
+
+        if ($range) {
+          detail.dateStr = {
+            from: inputRef?.value || "",
+            to: inputRefTo?.value || "",
+          };
+        } else {
+          detail.dateStr = inputRef?.value || "";
+        }
+
+        dispatch("change", detail);
+      } else {
+        dispatch("change", value);
+      }
+    }
+  };
+
+  /**
+   * @type {(relatedTarget: EventTarget | null) => void}
+   */
+  const blurInput = (relatedTarget) => {
+    if (!calendar) return;
+    // No relatedTarget means focus left the document (e.g. switching browser
+    // tabs); refocusing would replay the open animation. Outside clicks are
+    // handled separately by the window click handler below.
+    if (relatedTarget == null) return;
+    // In range mode, focus moves between the two inputs while the calendar
+    // stays open; closing here would replay the open animation on every switch.
+    if (datePickerRef?.contains(/** @type {Node} */ (relatedTarget))) return;
+    if (
+      calendar.calendarContainer.contains(/** @type {Node} */ (relatedTarget))
+    )
+      return;
+    calendar.close();
+  };
+
+  /**
+   * @type {() => void}
+   */
+  const openCalendar = () => {
+    calendar.open();
+  };
+
+  /**
+   * @type {() => void}
+   */
+  const focusCalendar = () => {
+    (
+      calendar.selectedDateElem ||
+      calendar.todayDateElem ||
+      calendar.calendarContainer.querySelector(".flatpickr-day[tabindex]") ||
+      calendar.calendarContainer
+    ).focus();
+  };
+
+  setContext("carbon:DatePicker", {
     range,
     inputValue,
     inputValueFrom,
     inputValueTo,
     inputIds,
     hasCalendar,
-    add: (data) => {
-      inputs.update((_) => [..._, data]);
-    },
-    declareRef: ({ id, ref }) => {
-      if ($inputIds.indexOf(id) === 0) {
-        inputRef = ref;
-      } else {
-        inputRefTo = ref;
-      }
-    },
-    updateValue: ({ type, value }) => {
-      if ((!calendar && type === "input") || type === "change") {
-        inputValue.set(value);
-      }
-
-      if (!calendar && type === "change") {
-        dispatch("change", value);
-      }
-    },
-    blurInput: (relatedTarget) => {
-      if (calendar && !calendar.calendarContainer.contains(relatedTarget)) {
-        calendar.close();
-      }
-    },
-    openCalendar: () => {
-      calendar.open();
-    },
-    focusCalendar: () => {
-      (
-        calendar.selectedDateElem ||
-        calendar.todayDateElem ||
-        calendar.calendarContainer.querySelector(".flatpickr-day[tabindex]") ||
-        calendar.calendarContainer
-      ).focus();
-    },
+    dateFormat: dateFormatStore,
+    add,
+    setReadonly,
+    declareRef,
+    updateValue,
+    blurInput,
+    openCalendar,
+    focusCalendar,
   });
+
+  function applyOptionIfChanged(optionKey, value, appliedValue = value) {
+    if (lastAppliedOptions[optionKey] !== value) {
+      calendar.set(optionKey, appliedValue);
+      lastAppliedOptions[optionKey] = value;
+    }
+  }
 
   async function initCalendar(options) {
     if (calendar) {
-      calendar.set("minDate", minDate);
-      calendar.set("maxDate", maxDate);
-      calendar.set("locale", locale);
-      calendar.set("dateFormat", dateFormat);
-      Object.entries(flatpickrProps).forEach(([option, value]) => {
-        calendar.set(options, value);
-      });
+      applyOptionIfChanged("minDate", minDate);
+      applyOptionIfChanged("maxDate", maxDate);
+      applyOptionIfChanged("locale", locale, resolveLocale(locale));
+      applyOptionIfChanged("dateFormat", dateFormat);
+      for (const [option, value] of Object.entries(flatpickrProps)) {
+        applyOptionIfChanged(option, value);
+      }
       return;
     }
+
+    // Auto-detect a top-layer ancestor (native dialog or open popover) so the
+    // calendar can participate in its top layer instead of being clipped behind
+    // the backdrop. Computed at creation time — appendTo cannot change after.
+    const topLayerAncestor = getTopLayerAncestor(datePickerRef);
+    calendarUsesFixedPositioning = effectivePortalMenu && !!topLayerAncestor;
 
     calendar = await createCalendar({
       options: {
         ...options,
-        appendTo: datePickerRef,
+        ...(effectivePortalMenu
+          ? {
+              static: false,
+              ...(topLayerAncestor && {
+                appendTo: topLayerAncestor,
+                position: positionFlatpickrCalendarFixed,
+              }),
+            }
+          : { appendTo: datePickerRef }),
         defaultDate: $inputValue,
         mode: $mode,
       },
       base: inputRef,
       input: inputRefTo,
       dispatch: (event) => {
-        const detail = { selectedDates: calendar.selectedDates };
+        if (calendarUsesFixedPositioning) {
+          if (event === "open") attachFixedRepositionListeners();
+          else if (event === "close") detachFixedRepositionListeners();
+        }
+        const detail = { selectedDates: calendar?.selectedDates || [] };
 
         if ($range) {
           const from = inputRef.value;
@@ -189,6 +356,7 @@
 
   onMount(() => {
     return () => {
+      detachFixedRepositionListeners();
       if (calendar) {
         calendar.destroy();
         calendar = null;
@@ -199,16 +367,30 @@
   afterUpdate(() => {
     if (calendar) {
       if ($range) {
-        calendar.setDate([$inputValueFrom, $inputValueTo]);
+        if (
+          $inputValueFrom !== prevValueFrom ||
+          $inputValueTo !== prevValueTo
+        ) {
+          calendar.setDate([$inputValueFrom, $inputValueTo]);
+          prevValueFrom = $inputValueFrom;
+          prevValueTo = $inputValueTo;
 
-        // workaround to remove the default range plugin separator "to"
-        inputRef.value = $inputValueFrom;
-      } else {
+          // workaround to remove the default range plugin separator "to"
+          if ($inputValueFrom !== "") {
+            inputRef.value = $inputValueFrom;
+          }
+          if ($inputValueTo !== "") {
+            inputRefTo.value = $inputValueTo;
+          }
+        }
+      } else if ($inputValue !== prevValue) {
         calendar.setDate($inputValue);
+        prevValue = $inputValue;
       }
     }
   });
 
+  $: dateFormatStore.set(dateFormat);
   $: inputValue.set(value);
   $: value = $inputValue;
   $: inputValueFrom.set(valueFrom);
@@ -224,16 +406,34 @@
       // default to static: true so the
       // date picker works inside a modal
       static: true,
+      clickOpens: !$readonlyAny,
+      // The flatpickr range plugin strips the `readonly` attribute when
+      // `allowInput` is true, so disable it to preserve the readonly state.
+      allowInput: !$readonlyAny,
       ...flatpickrProps,
-    });
+    })
+      .then(() => {})
+      .catch(() => {});
+  }
+  $: if (calendar) {
+    calendar.set("clickOpens", !$readonlyAny);
+    if ($readonlyAny && calendar.isOpen) calendar.close();
   }
 </script>
 
 <svelte:window
-  on:click={({ target }) => {
-    if (!calendar || !calendar.isOpen) return;
-    if (datePickerRef && datePickerRef.contains(target)) return;
-    if (!calendar.calendarContainer.contains(target)) calendar.close();
+  on:click={(event) => {
+    if (!calendar?.isOpen) return;
+    if (
+      isEventTargetInsidePortaledCalendar(
+        datePickerRef,
+        calendar.calendarContainer,
+        event.target,
+      )
+    ) {
+      return;
+    }
+    calendar.close();
   }}
 />
 
@@ -259,9 +459,9 @@
     class:bx--date-picker--range={datePickerType === "range"}
     class:bx--date-picker--nolabel={datePickerType === "range" &&
       $labelTextEmpty}
-    on:keydown={(e) => {
-      if (calendar?.isOpen && e.key === "Escape") {
-        e.stopPropagation();
+    on:keydown={(event) => {
+      if (calendar?.isOpen && event.key === "Escape") {
+        event.stopPropagation();
         calendar.close();
       }
     }}

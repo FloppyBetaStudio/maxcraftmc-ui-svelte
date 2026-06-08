@@ -1,7 +1,17 @@
 <script>
   /**
+   * @template [Icon=any]
+   */
+
+  /**
    * Specify the tab label.
-   * Alternatively, use the default slot (e.g., `<Tab><span>Label</span></Tab>`)
+   * Alternatively, use the default slot.
+   * @example
+   * ```svelte
+   * <Tab>
+   *   <span>Label</span>
+   * </Tab>
+   * ```
    */
   export let label = "";
 
@@ -11,20 +21,60 @@
   /** Set to `true` to disable the tab */
   export let disabled = false;
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /** Set an id for the top-level element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the anchor HTML element */
+  /**
+   * Specify an optional secondary label.
+   * Only rendered for container type tabs.
+   * Alternatively, use the "secondaryChildren" slot.
+   */
+  export let secondaryLabel = "";
+
+  /**
+   * Specify the icon to render.
+   * Icon is rendered to the right of the label.
+   * @type {Icon}
+   */
+  export let icon = /** @type {Icon} */ (undefined);
+
+  /**
+   * Obtain a reference to the anchor HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
 
-  const { selectedTab, useAutoWidth, add, update, change } = getContext("Tabs");
+  const {
+    selectedTab,
+    useAutoWidth,
+    useFullWidth,
+    hasSecondaryLabel,
+    add,
+    remove,
+    update,
+    change,
+  } = getContext("carbon:Tabs");
 
-  add({ id, label, disabled });
+  add({
+    id,
+    label,
+    disabled,
+    hasSecondaryLabel: Boolean(secondaryLabel || $$slots.secondaryChildren),
+  });
+
+  onMount(() => {
+    return () => {
+      remove(id);
+    };
+  });
 
   $: selected = $selectedTab === id;
 </script>
@@ -46,15 +96,13 @@
   on:mouseover
   on:mouseenter
   on:mouseleave
-  on:keydown={({ key }) => {
-    if (!disabled) {
-      if (key === "ArrowRight") {
-        change(1);
-      } else if (key === "ArrowLeft") {
-        change(-1);
-      } else if (key === " " || key === "Enter") {
-        update(id);
-      }
+  on:keydown={(event) => {
+    if (event.key === "ArrowRight") {
+      change(1);
+    } else if (event.key === "ArrowLeft") {
+      change(-1);
+    } else if (!disabled && (event.key === " " || event.key === "Enter")) {
+      update(id);
     }
   }}
 >
@@ -67,8 +115,39 @@
     {id}
     {href}
     class:bx--tabs__nav-link={true}
-    style:width={$useAutoWidth ? "auto" : undefined}
+    style:width={$useFullWidth ? "100%" : $useAutoWidth ? "auto" : undefined}
   >
-    <slot>{label}</slot>
+    {#if $hasSecondaryLabel}
+      <div class:bx--tabs__nav-item-label-wrapper={true}>
+        <span class:bx--tabs__nav-item-label={true}>
+          <slot>{label}</slot>
+        </span>
+        {#if icon}
+          <div class:bx--tabs__nav-item--icon={true}>
+            <svelte:component this={icon} />
+          </div>
+        {/if}
+      </div>
+      {#if secondaryLabel || $$slots.secondaryChildren}
+        <div
+          class:bx--tabs__nav-item-secondary-label={true}
+          title={secondaryLabel || undefined}
+        >
+          <slot name="secondaryChildren">{secondaryLabel}</slot>
+        </div>
+      {:else}
+        <div
+          class:bx--tabs__nav-item-secondary-label={true}
+          aria-hidden="true"
+        ></div>
+      {/if}
+    {:else}
+      <span class:bx--tabs__nav-item-label={true}> <slot>{label}</slot> </span>
+      {#if icon}
+        <div class:bx--tabs__nav-item--icon={true}>
+          <svelte:component this={icon} />
+        </div>
+      {/if}
+    {/if}
   </a>
 </li>

@@ -1,12 +1,36 @@
 <script>
   /**
+   * @event {MouseEvent} click
+   */
+
+  /**
    * Specify the item text.
-   * Alternatively, use the default slot
+   * Alternatively, use the default slot.
+   * @example
+   * ```svelte
+   * <OverflowMenuItem>
+   *   <span>Custom Text</span>
+   * </OverflowMenuItem>
+   * ```
    */
   export let text = "Provide text";
 
   /** Specify the `href` attribute if the item is a link */
   export let href = "";
+
+  /**
+   * Specify the `target` attribute if the item is a link
+   * @type {import("svelte/elements").SvelteHTMLElements["a"]["target"]}
+   */
+  export let target = "";
+
+  /**
+   * Specify the `rel` attribute if the item is a link.
+   * By default, `noopener noreferrer` is added if
+   * `target="_blank"` unless `rel` is specified.
+   * @type {import("svelte/elements").SvelteHTMLElements["a"]["rel"]}
+   */
+  export let rel = undefined;
 
   /** Set to `true` if the item should be focused when opening the menu */
   export let primaryFocus = false;
@@ -24,34 +48,72 @@
   export let requireTitle = true;
 
   /** Set an id for the top-level element */
-  export let id = "ccs-" + Math.random().toString(36);
+  export let id = `ccs-${Math.random().toString(36)}`;
 
-  /** Obtain a reference to the HTML element */
+  /**
+   * Obtain a reference to the HTML element.
+   * @bindable readonly
+   */
   export let ref = null;
 
-  import { getContext, afterUpdate } from "svelte";
+  import {
+    afterUpdate,
+    createEventDispatcher,
+    getContext,
+    onMount,
+  } from "svelte";
 
-  const { focusedId, add, update, change, items } = getContext("OverflowMenu");
+  const dispatch = createEventDispatcher();
+  const { focusedId, add, remove, update, change, first, last, itemsById } =
+    getContext("carbon:OverflowMenu");
 
-  $: item = $items.find((_) => _.id === id);
+  $: item = $itemsById[id];
 
   add({ id, text, primaryFocus, disabled });
 
+  $: focused = $focusedId === id;
+
+  onMount(() => () => remove(id));
+
   afterUpdate(() => {
-    if (ref && primaryFocus) {
+    if (ref && focused) {
       ref.focus();
     }
   });
 
-  $: primaryFocus = $focusedId === id;
   $: buttonProps = {
     role: "menuitem",
     tabindex: "-1",
     class: "bx--overflow-menu-options__btn",
+    type: href ? undefined : "button",
     disabled: href ? undefined : disabled,
+    "aria-disabled": href && disabled ? "true" : undefined,
     href: href ? href : undefined,
+    target: href && target ? target : undefined,
+    rel:
+      rel === undefined
+        ? target === "_blank"
+          ? "noopener noreferrer"
+          : undefined
+        : rel,
     title: requireTitle ? ($$slots.default ? undefined : text) : undefined,
   };
+
+  function handleClick(event) {
+    event.stopPropagation();
+
+    if (disabled) {
+      event.preventDefault();
+      return;
+    }
+
+    const shouldContinue = dispatch("click", event, { cancelable: true });
+
+    // Only update (close menu) if preventDefault was not called.
+    if (shouldContinue) {
+      update(id, item);
+    }
+  }
 </script>
 
 <li
@@ -69,48 +131,49 @@
     <a
       bind:this={ref}
       {...buttonProps}
-      on:click
-      on:click={(e) => {
-        e.stopPropagation();
-        update(id, item);
-      }}
+      on:click={handleClick}
       on:keydown
-      on:keydown={({ key }) => {
-        if (key === "ArrowDown") {
+      on:keydown={(event) => {
+        if (event.key === "ArrowDown") {
           change(1);
-        } else if (key === "ArrowUp") {
+        } else if (event.key === "ArrowUp") {
           change(-1);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          first();
+        } else if (event.key === "End") {
+          event.preventDefault();
+          last();
         }
       }}
     >
       <slot>
-        <div class:bx--overflow-menu-options__option-content={true}>
-          {text}
-        </div>
+        <div class:bx--overflow-menu-options__option-content={true}>{text}</div>
       </slot>
     </a>
   {:else}
     <button
+      type="button"
       bind:this={ref}
       {...buttonProps}
-      on:click
-      on:click={(e) => {
-        e.stopPropagation();
-        update(id, item);
-      }}
+      on:click={handleClick}
       on:keydown
-      on:keydown={({ key }) => {
-        if (key === "ArrowDown") {
+      on:keydown={(event) => {
+        if (event.key === "ArrowDown") {
           change(1);
-        } else if (key === "ArrowUp") {
+        } else if (event.key === "ArrowUp") {
           change(-1);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          first();
+        } else if (event.key === "End") {
+          event.preventDefault();
+          last();
         }
       }}
     >
       <slot>
-        <div class:bx--overflow-menu-options__option-content={true}>
-          {text}
-        </div>
+        <div class:bx--overflow-menu-options__option-content={true}>{text}</div>
       </slot>
     </button>
   {/if}

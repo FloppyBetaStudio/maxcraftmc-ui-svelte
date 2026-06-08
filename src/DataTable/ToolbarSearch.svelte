@@ -1,16 +1,21 @@
 <script>
   /**
+   * @template {import("./DataTable.svelte").DataTableRow} [Row=import("./DataTable.svelte").DataTableRow]
    * @restProps {input}
    * @event {null} clear
    */
 
   /**
-   * Specify the value of the search input
+   * Specify the value of the search input.
    * @type {number | string}
+   * @bindable writable
    */
   export let value = "";
 
-  /** Set to `true` to expand the search bar */
+  /**
+   * Set to `true` to expand the search bar.
+   * @bindable writable
+   */
   export let expanded = false;
 
   /** Set to `true` to keep the search bar expanded */
@@ -27,29 +32,35 @@
    *
    * To implement your own client-side filtering, pass a function
    * that accepts a row and value and returns a boolean.
-   * @type {boolean | ((row: import("./DataTable.svelte").DataTableRow, value: number | string) => boolean)}
+   * @type {boolean | ((row: Row, value: number | string) => boolean)}
    */
   export let shouldFilterRows = false;
 
   /**
-   * The filtered row ids
-   * @type {ReadonlyArray<import("./DataTable.svelte").DataTableRowId>}
+   * The filtered row ids.
+   * @type {ReadonlyArray<Row["id"]>}
+   * @bindable readonly
    */
   export let filteredRowIds = [];
 
-  /** Specify the tabindex */
+  /**
+   * Specify the tabindex
+   * @type {number | string | undefined}
+   */
   export let tabindex = "0";
 
   /**
-   * Obtain a reference to the input HTML element
+   * Obtain a reference to the input HTML element.
    * @type {null | HTMLInputElement}
+   * @bindable readonly
    */
   export let ref = null;
 
-  import { tick, getContext, afterUpdate, onMount } from "svelte";
+  import { getContext, onMount, tick } from "svelte";
   import Search from "../Search/Search.svelte";
+  import { rowsEqual } from "./data-table-utils.js";
 
-  const ctx = getContext("DataTable") ?? {};
+  const ctx = getContext("carbon:DataTable") ?? {};
 
   let rows = null;
   let unsubscribe = null;
@@ -58,7 +69,7 @@
     unsubscribe = ctx?.tableRows.subscribe((tableRows) => {
       // Only update if the rows have actually changed.
       // This approach works in both Svelte 4 and Svelte 5.
-      if (JSON.stringify(tableRows) !== JSON.stringify(rows)) {
+      if (!rowsEqual(tableRows, rows)) {
         rows = tableRows;
       }
     });
@@ -72,12 +83,9 @@
     };
   });
 
-  afterUpdate(() => {
-    // Only filter rows in a callback to avoid an infinite update loop.
-    if (rows !== null) {
-      filteredRowIds = ctx?.filterRows(value, shouldFilterRows);
-    }
-  });
+  $: if (rows !== null) {
+    filteredRowIds = ctx.filterRows(value, shouldFilterRows);
+  }
 
   async function expandSearch() {
     await tick();
@@ -87,7 +95,22 @@
     ref.focus();
   }
 
-  $: expanded = !!value.length;
+  /**
+   * Programmatically clear the search input.
+   * Resets `value` and collapses the search bar (unless `persistent`).
+   * @type {() => void}
+   * @example
+   * ```svelte
+   * <ToolbarSearch bind:this={search} />
+   * <Button on:click={() => search.clear()}>Clear search</Button>
+   * ```
+   */
+  export function clear() {
+    value = "";
+    if (!persistent) expanded = false;
+  }
+
+  $: if (!persistent) expanded = String(value ?? "").length > 0;
   $: classes = [
     expanded && "bx--toolbar-search-container-active",
     persistent
@@ -103,18 +126,18 @@
   {tabindex}
   {disabled}
   {...$$restProps}
-  searchClass="{classes} {$$restProps.class}"
+  searchClass={[classes, $$restProps.class].filter(Boolean).join(" ")}
   bind:ref
   bind:value
   on:clear
-  on:clear={expandSearch}
+  on:clear={clear}
   on:change
   on:input
   on:focus
   on:focus={expandSearch}
   on:blur
   on:blur={() => {
-    expanded = !persistent && !!value.length;
+    expanded = !persistent && String(value ?? "").length > 0;
   }}
   on:keyup
   on:keydown

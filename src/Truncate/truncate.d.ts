@@ -2,11 +2,17 @@ interface TruncateOptions {
   clamp?: "end" | "front";
 }
 
-export function TruncateAction(
+/**
+ * Svelte action that applies single-line text truncation to an element.
+ * @param node - The element to truncate
+ * @param options - Optional clamp direction ("end" or "front")
+ * @returns Object with update method (options may be undefined when action is updated with no args)
+ */
+export function truncate(
   node: HTMLElement,
   options?: TruncateOptions,
 ): {
   update: (options?: TruncateOptions) => void;
 };
 
-export default TruncateAction;
+export default truncate;
