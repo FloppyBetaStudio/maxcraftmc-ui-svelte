@@ -3,6 +3,9 @@ node_modules/
 dist/
 examples/**/dist/
 output/
+outputs/
+test-results/
+playwright-report/
 *.tgz
 .DS_Store
 npm-debug.log*
