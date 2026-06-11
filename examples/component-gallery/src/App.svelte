@@ -5,30 +5,17 @@
     Breadcrumb,
     BreadcrumbItem,
     Button,
-    ButtonSet,
-    Checkbox,
-    CheckboxGroup,
     ClickableTile,
     CodeSnippet,
-    ContextMenu,
-    ContextMenuDivider,
-    ContextMenuGroup,
-    ContextMenuOption,
-    ContextMenuRadioGroup,
-    ComboBox,
     ContainedList,
     ContainedListItem,
     Content,
     ContentSwitcher,
     CopyButton,
     DataTable,
-    DatePicker,
-    DatePickerInput,
-    Dropdown,
     ExpandableTile,
     FileUploader,
     FloatingPortal,
-    Grid,
     Header,
     HeaderAction,
     HeaderActionLink,
@@ -40,49 +27,32 @@
     HeaderPanelLinks,
     HeaderSearch,
     HeaderUtilities,
-    Heading,
     InlineLoading,
     InlineNotification,
     Link,
     Modal,
-    MultiSelect,
     Loading,
     NotificationQueue,
-    NumberInput,
     OrderedList,
-    OverflowMenu,
-    OverflowMenuItem,
     Pagination,
     PaginationNav,
-    PasswordInput,
     Popover,
     Portal,
     ProgressBar,
     ProgressIndicator,
     ProgressStep,
-    RadioButton,
-    RadioButtonGroup,
     RadioTile,
-    RangeSlider,
-    Row,
-    Search,
-    Section,
     SessionStorage,
     SideNav,
     SideNavItems,
     SideNavLink,
     SideNavMenu,
     SideNavMenuItem,
-    Select,
-    SelectItem,
-    SelectableTag,
     SelectableTile,
     SelectableTileGroup,
-    Slider,
     SkeletonIcon,
     SkeletonPlaceholder,
     SkeletonText,
-    Stack,
     StructuredList,
     StructuredListBody,
     StructuredListCell,
@@ -93,16 +63,12 @@
     Tab,
     TabContent,
     Tabs,
-    Tag,
     TextArea,
     TextInput,
     Theme,
     Tile,
     TileGroup,
-    TimePicker,
-    TimePickerSelect,
     ToastNotification,
-    Toggle,
     Tooltip,
     TooltipDefinition,
     TooltipIcon,
@@ -110,38 +76,16 @@
     Truncate,
     UnorderedList,
   } from "../../../src/index.js";
+  import ChoicesAndMenusSection from "./ChoicesAndMenusSection.svelte";
+  import GalleryHero from "./GalleryHero.svelte";
+  import InputsSection from "./InputsSection.svelte";
+  import { headers, items, rows, treeNodes } from "./gallery-data.js";
   import "../../../css/all.css";
   import "../../../css/maxcraft.css";
 
   const theme = new URLSearchParams(location.search).get("theme") === "dark" ? "g100" : "white";
   const dark = theme === "g100";
   if (dark) document.documentElement.classList.add("dark");
-
-  const items = [
-    { id: "survival", text: "生存服" },
-    { id: "creative", text: "创造服" },
-    { id: "archive", text: "归档服", disabled: true },
-  ];
-  const headers = [
-    { key: "server", value: "服务器" },
-    { key: "status", value: "状态" },
-    { key: "players", value: "玩家" },
-  ];
-  const rows = [
-    { id: "survival", server: "Survival", status: "online", players: 42 },
-    { id: "creative", server: "Creative", status: "online", players: 12 },
-    { id: "event", server: "Event", status: "locked", players: 0 },
-  ];
-  const treeNodes = [
-    {
-      id: "root",
-      text: "MaxCraft",
-      nodes: [
-        { id: "rules", text: "服务器规则" },
-        { id: "systems", text: "系统", nodes: [{ id: "economy", text: "经济" }, { id: "whitelist", text: "白名单" }] },
-      ],
-    },
-  ];
 
   let slots = 6;
   let taxRate = 5;
@@ -224,112 +168,30 @@
 
   <Content>
     <main class="gallery" data-theme={theme}>
-      <section class="hero">
-        <p class="eyebrow">MaxCraft UI</p>
-        <h1>Component Gallery</h1>
-        <p>Carbon-compatible Svelte components with MaxCraft visual states.</p>
-        <ButtonSet>
-          <Button>主操作</Button>
-          <Button kind="secondary">次操作</Button>
-          <Button kind="tertiary">三层操作</Button>
-          <Button kind="ghost">幽灵操作</Button>
-          <Button kind="danger">危险操作</Button>
-          <Button disabled>禁用</Button>
-        </ButtonSet>
-      </section>
+      <GalleryHero />
 
-      <section class="surface" id="inputs">
-        <Section level={2} tag="div">
-          <Heading>Inputs</Heading>
-        </Section>
-        <div class="grid">
-          <TextInput labelText="Minecraft ID" value="Steve" helperText="普通输入" />
-          <TextInput labelText="错误状态" value="bad id" invalid invalidText="此 ID 不可用" />
-          <TextInput labelText="警告状态" value="Alex" warn warnText="建议绑定 UUID" />
-          <TextInput labelText="禁用状态" value="Disabled" disabled />
-          <PasswordInput labelText="指令令牌" value="secret-token" />
-          <PasswordInput labelText="错误令牌" value="bad-token" invalid invalidText="令牌无效" />
-          <TextArea labelText="申请说明" value="希望加入服务器" />
-          <TextArea labelText="错误说明" value="字数不足" invalid invalidText="请补充申请原因" />
-          <Search labelText="搜索玩家" bind:value={search} />
-          <Select labelText="目标服务器" bind:selected={selectValue}>
-            <SelectItem value="survival" text="生存服" />
-            <SelectItem value="creative" text="创造服" />
-          </Select>
-          <NumberInput label="席位数量" min={1} max={12} bind:value={slots} />
-          <NumberInput label="税率" min={0} max={100} bind:value={taxRate} invalid invalidText="税率过高" />
-          <Slider labelText="音量" min={0} max={100} bind:value={taxRate} />
-          <RangeSlider
-            labelText="资源区间"
-            min={0}
-            max={100}
-            bind:value={rangeLow}
-            bind:valueUpper={rangeHigh}
-            minLabel="低"
-            maxLabel="高"
-          />
-          <DatePicker datePickerType="single" value="2026-06-05">
-            <DatePickerInput labelText="维护日期" placeholder="yyyy-mm-dd" />
-          </DatePicker>
-          <TimePicker labelText="重启时间" value="04:00">
-            <TimePickerSelect>
-              <SelectItem value="AM" text="AM" />
-              <SelectItem value="PM" text="PM" />
-            </TimePickerSelect>
-          </TimePicker>
-        </div>
-      </section>
+      <InputsSection
+        bind:search
+        bind:selectValue
+        bind:slots
+        bind:taxRate
+        bind:rangeLow
+        bind:rangeHigh
+      />
 
-      <section class="surface">
-        <h2>Choices And Menus</h2>
-        <div class="grid">
-          <Dropdown titleText="Dropdown" label="选择服务器" {items} bind:open={dropdownOpen} selectedId="survival" />
-          <ComboBox titleText="ComboBox" placeholder="输入服务器" {items} bind:open={comboOpen} selectedId="creative" />
-          <MultiSelect titleText="MultiSelect" label="选择多个区域" {items} selectedIds={["survival"]} bind:open={multiOpen} />
-          <MultiSelect titleText="Filterable MultiSelect" label="筛选区域" {items} filterable selectedIds={["creative"]} />
-          <Toggle labelText="启用白名单" bind:toggled={toggleOn} />
-          <Toggle size="sm" labelText="小号开关" bind:toggled={toggleOn} />
-          <Checkbox labelText="记住设备" bind:checked />
-          <Checkbox labelText="禁用复选框" disabled checked />
-          <CheckboxGroup legendText="通知偏好" bind:selected={groupChoices} helperText="CheckboxGroup 覆盖 0.108 组态。">
-            <Checkbox value="remember" labelText="记住设备" />
-            <Checkbox value="alerts" labelText="维护提醒" />
-            <Checkbox value="readonly" labelText="只读选项" readonly />
-          </CheckboxGroup>
-          <RadioButtonGroup legendText="模式" bind:selected={mode}>
-            <RadioButton value="survival" labelText="生存" />
-            <RadioButton value="creative" labelText="创造" />
-            <RadioButton value="spectator" labelText="旁观" disabled />
-          </RadioButtonGroup>
-          <OverflowMenu bind:open={overflowOpen} flipped>
-            <OverflowMenuItem text="编辑" />
-            <OverflowMenuItem text="禁用项" disabled />
-            <OverflowMenuItem text="删除" danger />
-          </OverflowMenu>
-          <div class="context-target">
-            <p>ContextMenu target</p>
-            <ContextMenu open={contextOpen} x={24} y={24}>
-              <ContextMenuOption labelText="刷新" shortcutText="R" selected selectable />
-              <ContextMenuGroup>
-                <ContextMenuOption id="copy" labelText="复制" selected />
-                <ContextMenuOption id="paste" labelText="粘贴" />
-              </ContextMenuGroup>
-              <ContextMenuRadioGroup>
-                <ContextMenuOption id="fast" labelText="快速" selected />
-                <ContextMenuOption id="safe" labelText="安全" />
-              </ContextMenuRadioGroup>
-              <ContextMenuDivider />
-              <ContextMenuOption labelText="危险操作" kind="danger" />
-            </ContextMenu>
-          </div>
-        </div>
-        <Stack orientation="horizontal" gap={4} align="center" class="tag-stack">
-          <SelectableTag type="green" bind:selected={selectedTags}>在线</SelectableTag>
-          <SelectableTag type="outline">可加入</SelectableTag>
-          <SelectableTag type="gray" disabled>维护中</SelectableTag>
-          <Tag type="cyan">Tag</Tag>
-        </Stack>
-      </section>
+      <ChoicesAndMenusSection
+        {items}
+        bind:dropdownOpen
+        bind:comboOpen
+        bind:multiOpen
+        bind:toggleOn
+        bind:checked
+        bind:groupChoices
+        bind:mode
+        bind:overflowOpen
+        bind:contextOpen
+        bind:selectedTags
+      />
 
       <section class="surface">
         <h2>Tiles And Navigation</h2>
@@ -503,25 +365,16 @@
     gap: 1.25rem;
   }
 
-  .hero,
   .surface {
     display: grid;
     min-width: 0;
     gap: 1rem;
   }
 
-  .hero h1,
-  .hero p,
   .surface h2,
   .surface h3,
   .surface p {
     margin: 0;
-  }
-
-  .eyebrow {
-    color: var(--cds-text-02);
-    font-size: 0.875rem;
-    font-weight: 800;
   }
 
   .surface {
@@ -542,13 +395,6 @@
 
   .tiles {
     grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
-  }
-
-  .context-target {
-    position: relative;
-    min-height: 13rem;
-    padding: 1rem;
-    border: 3px dashed var(--mc-border);
   }
 
   .popover-body {
@@ -575,10 +421,6 @@
     justify-content: center;
     min-width: 2rem;
     font-weight: 850;
-  }
-
-  :global(.tag-stack) {
-    flex-wrap: wrap;
   }
 
   .portal-demo {

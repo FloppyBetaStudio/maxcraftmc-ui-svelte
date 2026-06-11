@@ -1,6 +1,11 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 
-const gallery = await readFile(new URL("../examples/component-gallery/src/App.svelte", import.meta.url), "utf8");
+const gallerySourceDir = new URL("../examples/component-gallery/src/", import.meta.url);
+const galleryFiles = await readdir(gallerySourceDir);
+const gallerySvelteFiles = galleryFiles.filter((file) => file.endsWith(".svelte"));
+const gallery = (
+  await Promise.all(gallerySvelteFiles.map((file) => readFile(new URL(file, gallerySourceDir), "utf8")))
+).join("\n");
 const requiredComponents = [
   "Accordion",
   "Breadcrumb",
