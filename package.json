@@ -58,6 +58,7 @@
     "build": "npm run check && npm pack --dry-run",
     "gallery:build": "vite build examples/component-gallery",
     "gallery:audit": "node scripts/audit-component-gallery.mjs",
+    "test:e2e": "playwright test",
     "test": "npm run check"
   },
   "dependencies": {
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@playwright/test": "^1.56.1",
     "carbon-components-svelte": "0.108.0",
     "vite": "^6.2.5"
   },

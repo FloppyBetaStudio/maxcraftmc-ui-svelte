@@ -3733,3 +3733,26 @@ body {
     padding-bottom: 0.5rem;
   }
 }
+/* MaxCraft modal action contract: keep primary/secondary actions visible without page-level Carbon DOM overrides. */
+.bx--modal-footer:has(> .bx--btn--secondary):has(> .bx--btn--primary) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bx--modal-footer--three-button:has(> .bx--btn) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bx--modal-footer:has(> .bx--btn--secondary):has(> .bx--btn--primary) > .bx--btn {
+  width: 100%;
+  max-width: none;
+}
+
+.bx--modal-footer:has(> .bx--btn--secondary):has(> .bx--btn--primary) > .bx--btn--primary:not(:disabled) {
+  background-color: var(--cds-support-02, #198038);
+  color: var(--cds-text-on-color, #ffffff);
+}
+
+.bx--modal-footer:has(> .bx--btn--secondary):has(> .bx--btn--primary) > .bx--btn--primary:not(:disabled):hover {
+  background-color: #0e6027;
+}
