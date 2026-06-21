@@ -2025,7 +2025,7 @@ body {
 .dark .bx--header .bx--btn--primary.bx--header__action:active {
   background: linear-gradient(#6abf45, #3f9a35) !important;
   background-color: var(--mc-grass) !important;
-  color: #101827 !important;
+  color: #ffffff !important;
 }
 
 .bx--header .bx--btn--primary.bx--header__action,
@@ -2035,7 +2035,7 @@ body {
 .dark .bx--header .bx--btn--primary.bx--header__action {
   background: linear-gradient(#6abf45, #3f9a35) !important;
   background-color: var(--mc-grass) !important;
-  color: #101827 !important;
+  color: #ffffff !important;
 }
 
 .bx--header .bx--header__name,
