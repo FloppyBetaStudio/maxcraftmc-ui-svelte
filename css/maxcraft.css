@@ -197,6 +197,15 @@ pre {
   color: var(--mc-ink);
 }
 
+.bx--btn--secondary:hover,
+.bx--btn--secondary:focus,
+.bx--btn--tertiary:hover,
+.bx--btn--tertiary:focus {
+  background: linear-gradient(#e8e8e8, #b0b0b0);
+  color: var(--mc-ink);
+  filter: none;
+}
+
 .bx--btn--ghost {
   background: linear-gradient(#ffffff, #d5d1c3);
   color: var(--mc-grass-dark);
