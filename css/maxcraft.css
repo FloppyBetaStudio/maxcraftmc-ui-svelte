@@ -200,7 +200,9 @@ pre {
 .bx--btn--secondary:hover,
 .bx--btn--secondary:focus,
 .bx--btn--tertiary:hover,
-.bx--btn--tertiary:focus {
+.bx--btn--tertiary:focus,
+[theme="white"] .bx--btn--secondary:hover,
+[theme="white"] .bx--btn--secondary:focus {
   background: linear-gradient(#e8e8e8, #b0b0b0);
   color: var(--mc-ink);
   filter: none;
