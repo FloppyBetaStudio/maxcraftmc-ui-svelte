@@ -2377,6 +2377,30 @@ body {
   box-shadow: inset 0 2px rgb(255 255 255 / 0.16), inset 0 -3px rgb(0 0 0 / 0.12);
 }
 
+/* Read-only fields must remain legible: regular text color instead of the
+   dimmed disabled color, and a non-interactive cursor. */
+.bx--text-input--readonly,
+.bx--text-area--readonly,
+.bx--select-input--readonly {
+  color: var(--cds-text-01);
+  cursor: default;
+}
+
+.bx--g80 .bx--text-input--readonly,
+.bx--g90 .bx--text-input--readonly,
+.bx--g100 .bx--text-input--readonly,
+.dark .bx--text-input--readonly,
+.bx--g80 .bx--text-area--readonly,
+.bx--g90 .bx--text-area--readonly,
+.bx--g100 .bx--text-area--readonly,
+.dark .bx--text-area--readonly,
+.bx--g80 .bx--select-input--readonly,
+.bx--g90 .bx--select-input--readonly,
+.bx--g100 .bx--select-input--readonly,
+.dark .bx--select-input--readonly {
+  color: var(--mc-text, #f4f4f4);
+}
+
 .bx--tooltip-portal,
 .bx--tooltip--portal-active,
 .bx--copy-btn--portal-active {

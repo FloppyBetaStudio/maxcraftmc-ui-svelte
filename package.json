@@ -1,6 +1,6 @@
 {
   "name": "@ifloppy/maxcraftmc-ui-svelte",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "license": "Apache-2.0",
   "description": "MaxCraft themed compatibility build of carbon-components-svelte 0.108.0.",
   "type": "module",

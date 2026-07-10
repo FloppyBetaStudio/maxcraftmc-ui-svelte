@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+- Read-only text inputs, text areas, and select inputs now use the regular
+  text color instead of the dimmed disabled color, so their values stay
+  legible in both light and dark MaxCraft themes.
+
 ## 0.2.6
 
 - Unified the shell header's static background so the brand area and global
