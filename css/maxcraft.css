@@ -22,6 +22,8 @@
   --mc-dark-layer: #1b222a;
   --mc-dark-layer-accent: #25301f;
   --mc-dark-layer-hover: #263447;
+  --mc-header-height: 3rem;
+  --mc-side-nav-width: 16rem;
   --mc-font-sans: "IBM Plex Sans", "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
   --mc-font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-sans: var(--mc-font-sans);
@@ -44,6 +46,7 @@
   --cds-interactive-02: var(--mc-bedrock);
   --cds-interactive-03: var(--mc-grass-dark);
   --cds-interactive-04: var(--mc-redstone);
+  --cds-border-interactive: var(--mc-grass);
   --cds-ui-background: var(--mc-paper-soft);
   --cds-background: var(--mc-paper-soft);
   --cds-ui-01: var(--mc-layer);
@@ -91,6 +94,7 @@
   --cds-interactive-02: #d5d1c3;
   --cds-interactive-03: #86efac;
   --cds-interactive-04: var(--mc-redstone);
+  --cds-border-interactive: #62d76b;
   --cds-ui-background: var(--mc-dark-background);
   --cds-background: var(--mc-dark-background);
   --cds-ui-01: var(--mc-dark-layer);
@@ -3432,6 +3436,32 @@ body {
   border-left-color: var(--mc-grass);
   background: linear-gradient(90deg, rgb(76 154 42 / 0.28), transparent);
   color: var(--cds-text-01);
+}
+
+/* Hide Carbon's hardcoded #0f62fe current-indicator; MaxCraft uses border-left. */
+a.bx--side-nav__link[aria-current="page"]::before,
+a.bx--side-nav__link--current::before,
+.bx--side-nav__item--active
+  .bx--side-nav__submenu[aria-expanded="false"]::before {
+  display: none;
+  content: none;
+  background-color: transparent;
+}
+
+.bx--g80 .bx--side-nav__link--current,
+.bx--g90 .bx--side-nav__link--current,
+.bx--g100 .bx--side-nav__link--current,
+.dark .bx--side-nav__link--current,
+.bx--g80 .bx--side-nav__link--current:hover,
+.bx--g90 .bx--side-nav__link--current:hover,
+.bx--g100 .bx--side-nav__link--current:hover,
+.dark .bx--side-nav__link--current:hover,
+.bx--g80 .bx--side-nav__link[aria-current="page"],
+.bx--g90 .bx--side-nav__link[aria-current="page"],
+.bx--g100 .bx--side-nav__link[aria-current="page"],
+.dark .bx--side-nav__link[aria-current="page"] {
+  border-left-color: #62d76b;
+  background: linear-gradient(90deg, rgb(98 215 107 / 0.22), transparent);
 }
 
 .bx--side-nav__icon svg,

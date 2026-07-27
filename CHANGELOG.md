@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.10
+
+- Side nav current-item indicators no longer show Carbon blue (`#0f62fe`).
+  MaxCraft keeps the grass `border-left` accent and suppresses Carbon's
+  hardcoded `::before` bar in both light and dark themes.
+- Added `--cds-border-interactive`, `--mc-header-height`, and
+  `--mc-side-nav-width` shell tokens for consumers (route progress bars,
+  layout offsets).
+
 ## 0.2.9
 
 - Read-only text inputs, text areas, and select inputs now use the regular
