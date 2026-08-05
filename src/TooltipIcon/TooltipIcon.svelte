@@ -148,6 +148,10 @@
     !disabled &&
     (hovered || focused || open);
 
+  $: accessibleLabel =
+    $$props["aria-label"] ??
+    ($$props["aria-labelledby"] ? undefined : tooltipText || undefined);
+
   const PORTAL_HORIZONTAL_GAP_LEFT_PX = 2;
   const PORTAL_HORIZONTAL_GAP_RIGHT_PX = 2;
   const PORTAL_VERTICAL_GAP_TOP_PX = 1;
@@ -224,6 +228,7 @@
   class:bx--tooltip--align-end={!effectivePortalTooltip && align === "end"}
   style:cursor={disabled ? "not-allowed" : "default"}
   {...$$restProps}
+  aria-label={accessibleLabel}
   on:click
   on:click={() => {
     if (disabled) return;

@@ -68,7 +68,11 @@ export default class ComposedModal extends SvelteComponentTyped<
     click: WindowEventMap["click"];
     "click:button--primary": CustomEvent<null>;
     close: CustomEvent<{
-      trigger: "escape-key" | "outside-click" | "close-button";
+      trigger:
+        | "escape-key"
+        | "outside-click"
+        | "close-button"
+        | "programmatic";
     }>;
     keydown: WindowEventMap["keydown"];
     mouseenter: WindowEventMap["mouseenter"];

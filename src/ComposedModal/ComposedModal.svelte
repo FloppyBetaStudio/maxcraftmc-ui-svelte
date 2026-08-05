@@ -1,7 +1,7 @@
 <script>
   /**
    * @event close
-   * @property {"escape-key" | "outside-click" | "close-button"} trigger
+   * @property {"escape-key" | "outside-click" | "close-button" | "programmatic"} trigger
    * @event transitionend
    * @property {boolean} open
    */
@@ -140,7 +140,7 @@
       if (!open) {
         opened = false;
         if (!closeDispatched) {
-          dispatch("close");
+          dispatch("close", { trigger: "programmatic" });
         }
         closeDispatched = false;
       }

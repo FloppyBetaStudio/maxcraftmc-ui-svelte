@@ -85,7 +85,8 @@
       </Popover>
     </div>
     <TooltipDefinition term="钻石色 focus">键盘焦点统一用 diamond token。</TooltipDefinition>
-    <TooltipIcon tooltipText="图标 tooltip" />
+    <TooltipIcon tooltipText="图标 tooltip"><span aria-hidden="true">?</span></TooltipIcon>
+    <TooltipIcon tooltipText="默认 tooltip 名称" aria-label="自定义图标名称"><span aria-hidden="true">i</span></TooltipIcon>
     <Link href="#inputs">锚点链接</Link>
     <div class="truncate-demo">
       <Truncate>这是一段会被截断的 MaxCraft UI 文本，用来覆盖 Truncate 组件。</Truncate>

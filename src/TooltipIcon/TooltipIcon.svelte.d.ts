@@ -7,6 +7,8 @@ type $Props<Icon = any> = {
   /**
    * Specify the tooltip text.
    * Alternatively, use the "tooltipText" slot.
+   * Also provides the button's accessible name when neither `aria-label` nor
+   * `aria-labelledby` is specified.
    * @default ""
    */
   tooltipText?: string;

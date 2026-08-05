@@ -69,9 +69,9 @@ function auditScript() {
   };
   const colorStops = (value) => String(value).match(/rgba?\(\d+,\s*\d+,\s*\d+(?:,\s*[\d.]+)?\)/g) ?? [];
   const effectiveBackgrounds = (style) => {
-    if (!/rgba\(0,\s*0,\s*0,\s*0\)/.test(style.backgroundColor)) return [style.backgroundColor];
     const gradientColors = colorStops(style.backgroundImage);
-    return gradientColors.length ? gradientColors : [style.backgroundColor];
+    if (gradientColors.length) return gradientColors;
+    return [style.backgroundColor];
   };
   const nearestPaintedBackground = (el, boundary) => {
     let current = el;

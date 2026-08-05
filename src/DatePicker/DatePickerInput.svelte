@@ -124,6 +124,9 @@
   // Invalid/warn states are suppressed when the input is disabled or read-only.
   $: showInvalid = invalid && !disabled && !readonly;
   $: showWarn = warn && !invalid && !disabled && !readonly;
+  $: calendarButtonLabel =
+    iconDescription ||
+    (labelText ? `Open calendar for ${labelText}` : "Open calendar");
 </script>
 
 <div
@@ -200,11 +203,19 @@
       />
     {/if}
     {#if $hasCalendar && !showInvalid && !showWarn}
-      <Calendar
-        class="bx--date-picker__icon"
-        aria-label={iconDescription}
+      <button
+        type="button"
+        class="bx--date-picker__icon bx--date-picker__icon-button"
+        aria-label={calendarButtonLabel}
+        disabled={disabled || readonly}
         on:click={openCalendar}
-      />
+        on:keyup={(event) => {
+          // Flatpickr prevents the native synthetic click for Enter/Space.
+          if (event.key === "Enter" || event.key === " ") openCalendar();
+        }}
+      >
+        <Calendar aria-hidden="true" />
+      </button>
     {/if}
   </div>
   {#if showInvalid}

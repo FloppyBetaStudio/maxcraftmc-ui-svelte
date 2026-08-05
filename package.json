@@ -54,10 +54,11 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "check": "node scripts/check-upstream-definitions.mjs && node scripts/check-api-compat.mjs && node scripts/check-export-targets.mjs && node scripts/check-vite-smoke.mjs && node scripts/check-no-placeholders.mjs && node scripts/check-css-entrypoints.mjs && node scripts/check-docs.mjs && node scripts/check-gallery-coverage.mjs",
+    "check": "node scripts/check-upstream-definitions.mjs && node scripts/check-api-compat.mjs && node scripts/check-export-targets.mjs && node scripts/check-vite-smoke.mjs && node scripts/check-no-placeholders.mjs && node scripts/check-css-entrypoints.mjs && node scripts/check-docs.mjs && node scripts/check-gallery-coverage.mjs && npm run test:e2e:a11y",
     "build": "npm run check && npm pack --dry-run",
     "gallery:build": "vite build examples/component-gallery",
     "gallery:audit": "node scripts/audit-component-gallery.mjs",
+    "test:e2e:a11y": "playwright test tests/e2e/accessibility.spec.ts --project=chromium-desktop",
     "test:e2e": "playwright test",
     "test": "npm run check"
   },

@@ -162,7 +162,11 @@ export default class Modal<Icon = any> extends SvelteComponentTyped<
       text: string;
     }>;
     close: CustomEvent<{
-      trigger: "escape-key" | "outside-click" | "close-button";
+      trigger:
+        | "escape-key"
+        | "outside-click"
+        | "close-button"
+        | "programmatic";
     }>;
     keydown: WindowEventMap["keydown"];
     mouseenter: WindowEventMap["mouseenter"];

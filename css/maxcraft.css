@@ -2040,7 +2040,7 @@ body {
 .dark .bx--header .bx--btn--primary.bx--header__action:active {
   background: linear-gradient(#6abf45, #3f9a35) !important;
   background-color: var(--mc-grass) !important;
-  color: #ffffff !important;
+  color: var(--mc-ink) !important;
 }
 
 .bx--header .bx--btn--primary.bx--header__action,
@@ -2050,7 +2050,7 @@ body {
 .dark .bx--header .bx--btn--primary.bx--header__action {
   background: linear-gradient(#6abf45, #3f9a35) !important;
   background-color: var(--mc-grass) !important;
-  color: #ffffff !important;
+  color: var(--mc-ink) !important;
 }
 
 .bx--header .bx--header__name,
@@ -2701,6 +2701,26 @@ body {
 
 .bx--date-picker__icon:not(.bx--date-picker__icon--invalid):not(.bx--date-picker__icon--warn) {
   cursor: pointer;
+}
+
+.bx--date-picker__icon-button {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mc-border);
+  align-items: center;
+  justify-content: center;
+}
+
+.bx--date-picker__icon-button:focus-visible {
+  outline: 3px solid var(--mc-diamond);
+  outline-offset: 2px;
+}
+
+.bx--date-picker__icon-button:disabled {
+  color: var(--cds-icon-02);
+  cursor: not-allowed;
 }
 
 .bx--date-picker__calendar,
@@ -3820,4 +3840,81 @@ a.bx--side-nav__link--current::before,
 
 .bx--modal-footer:has(> .bx--btn--secondary):has(> .bx--btn--primary) > .bx--btn--primary:not(:disabled):hover {
   background-color: #0e6027;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx--btn,
+  .bx--tile,
+  .bx--clickable-tile,
+  .bx--tile--clickable,
+  .bx--content-switcher-btn,
+  .bx--copy-btn,
+  .bx--date-picker__icon-button,
+  .bx--modal,
+  .bx--modal-container,
+  .bx--tooltip__trigger,
+  .bx--tooltip-portal {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+
+  .bx--loading__stroke,
+  .bx--inline-loading__animation,
+  .bx--progress-bar--indeterminate .bx--progress-bar__track::after,
+  .bx--skeleton,
+  .bx--skeleton__text,
+  .bx--skeleton__placeholder {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .bx--btn,
+  .bx--clickable-tile,
+  .bx--tile--clickable,
+  .bx--content-switcher,
+  .bx--copy-btn,
+  .bx--date-picker__input,
+  .bx--date-picker__icon-button,
+  .bx--modal-container,
+  .bx--modal-close,
+  .bx--tooltip__trigger,
+  .bx--tooltip-portal {
+    border-color: ButtonText;
+    box-shadow: none;
+    forced-color-adjust: auto;
+  }
+
+  .bx--btn:focus-visible,
+  .bx--clickable-tile:focus-visible,
+  .bx--tile--clickable:focus-visible,
+  .bx--content-switcher-btn:focus-visible,
+  .bx--copy-btn:focus-visible,
+  .bx--date-picker__input:focus,
+  .bx--date-picker__icon-button:focus-visible,
+  .bx--modal-close:focus-visible,
+  .bx--tooltip__trigger:focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .bx--date-picker__icon-button,
+  .bx--date-picker__icon-button svg,
+  .bx--modal-close,
+  .bx--modal-close svg,
+  .bx--tooltip__trigger,
+  .bx--tooltip__trigger svg {
+    color: ButtonText;
+    fill: currentColor;
+  }
+
+  .bx--btn--primary,
+  .bx--content-switcher-btn.bx--content-switcher--selected,
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
 }

@@ -48,6 +48,7 @@
   let overflowOpen = false;
   let contextOpen = false;
   let modalOpen = false;
+  let modalCloseTrigger = "";
   let headerPanelOpen = false;
   let search = "Steve";
   let headerSearch = "wiki";
@@ -58,7 +59,10 @@
 
 </script>
 
-<svelte:window on:maxcraft-gallery-open-modal={() => (modalOpen = true)} />
+<svelte:window
+  on:maxcraft-gallery-open-modal={() => (modalOpen = true)}
+  on:maxcraft-gallery-close-modal={() => (modalOpen = false)}
+/>
 
 <Theme {theme}>
   <Header company="MaxCraftMC" platformName="UI Gallery" href="/">
@@ -93,7 +97,11 @@
   </Header>
 
   <Content>
-    <main class="gallery" data-theme={theme}>
+    <main
+      class="gallery"
+      data-theme={theme}
+      data-modal-close-trigger={modalCloseTrigger}
+    >
       <GalleryHero />
 
       <InputsSection
@@ -132,6 +140,7 @@
         primaryButtonText="确认"
         secondaryButtonText="取消"
         hasForm
+        on:close={(event) => (modalCloseTrigger = event.detail.trigger)}
       >
         <TextInput labelText="弹窗输入" value="Steve" />
         <TextArea labelText="弹窗错误说明" value="Too short" invalid invalidText="请补充说明" />
