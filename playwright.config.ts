@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = Number(process.env.MAXCRAFT_UI_E2E_PORT ?? 4176);
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -11,6 +12,7 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     trace: "on-first-retry",
+    launchOptions: executablePath ? { executablePath } : undefined,
   },
   webServer: {
     command: `npm run gallery:build && npx vite preview examples/component-gallery --host 127.0.0.1 --port ${port}`,
