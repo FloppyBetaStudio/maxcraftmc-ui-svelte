@@ -55,6 +55,8 @@
   --cds-icon-01: var(--mc-ink);
   --cds-icon-02: #374151;
   --cds-link-01: var(--mc-grass-dark);
+  --cds-link-primary: var(--mc-grass-dark);
+  --cds-link-primary-hover: var(--mc-grass);
   --cds-focus: var(--mc-diamond);
   --cds-hover-primary: var(--mc-grass-dark);
   --cds-hover-secondary: #3f4247;
@@ -91,6 +93,8 @@
   --cds-icon-01: #f9fafb;
   --cds-icon-02: #d1d5db;
   --cds-link-01: #86efac;
+  --cds-link-primary: #86efac;
+  --cds-link-primary-hover: #b7f7c0;
   --cds-focus: var(--mc-diamond);
   --cds-hover-primary: #208f3c;
   --cds-hover-secondary: #d5d1c3;
